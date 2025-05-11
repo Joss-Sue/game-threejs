@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 400px;
+      margin: auto;
+      padding: 2rem;
+    }
+    input, button {
+      display: block;
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.5rem;
+    }
+    a {
+      margin-top: 1rem;
+      display: block;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>pRUEBA</h2>
+  <form method="POST" action="/">
+    <label for="nombre">Nombre de usuario</label>
+    <input type="text" id="nombre" name="nombre" required />
+
+    <label for="email">Correo electrónico</label>
+    <input type="email" id="email" name="email" required />
+
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" name="password" required />
+
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <a href="/login.html">¿Ya tienes cuenta? Inicia sesión</a>
+</body>
+</html>

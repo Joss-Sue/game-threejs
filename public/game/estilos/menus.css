@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+body {
+    background-image: url('../source/fondo2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: "Audiowide", serif;
+}
+
+.bg-primary {
+    background-color: #021a27da !important;
+}
+
+.margin-top {
+    margin-top: 30px;
+}
+
+.margin-bottom {
+    margin-bottom: 40px;
+}
+
+.margin-top-boton {
+    margin-top: 20px;
+}
+label{
+    font-size: 25px;
+    color: rgb(237, 237, 126);
+}
+h2,h3{
+    color: rgb(59, 252, 249);
+    font-size: 50px; 
+
+}
+input{
+    box-shadow: 0px 17px 52px -6px rgba(52, 49, 11, 1);
+}
+
+html::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background-color: black;
+}
+
+html::-webkit-scrollbar-thumb {
+   background-color: rgb(241, 241, 137);
+   border-radius: 30px;
+   height: 20px;
+    
+}
+.tarjMenu{
+    border-radius: 10px;
+    box-shadow: 0px 0px 17px 3px rgba(44, 208, 205, 0.56);
+}
+
+button {
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s ease-in-out;
+}
+
+.btnIniPar {
+    background: linear-gradient(to right, rgb(227, 254, 187) 0%, rgb(169, 255, 41) 100%);
+    background-size: 200% 100%;
+    border: none;
+    transition: background-position 0.4s ease-in-out;
+}
+
+.btnIniPar:hover {
+    background-position: -100% 0;
+    box-shadow: 0px 2px 15px 2px rgba(124, 252, 26, 0.56);
+}
+
+.btnPuntu {
+    background: linear-gradient(to right, rgb(205, 249, 248) 0%, rgb(59, 252, 249) 100%);
+    background-size: 200% 100%;
+    transition: background-position 0.4s ease-in-out;
+}
+
+.btnPuntu:hover {
+    background-position: -100% 0;
+    box-shadow: 0px 2px 15px 3px rgb(59, 252, 249);
+    border-color: rgb(59, 252, 249);
+}
+
+.btnSalir {
+    background: linear-gradient(to right, rgb(251, 133, 133) 0%, rgb(255, 32, 32) 100%);
+    background-size: 200% 100%;
+    transition: background-position 0.4s ease-in-out;
+}
+
+.btnSalir:hover {
+    background-position: -100% 0;
+    box-shadow: 0px 2px 15px 3px rgba(252, 26, 26, 0.56);
+}
+.btnConfig {
+    background: linear-gradient(to right, rgb(129, 168, 230) 0%, rgb(20, 82, 238) 100%);
+    background-size: 200% 100%;
+    transition: background-position 0.4s ease-in-out;
+}
+
+.btnConfig:hover {
+    background-position: -100% 0;
+    box-shadow: 0px 2px 15px 3px  rgb(20, 82, 238);
+    border-color:rgb(20, 82, 238) ;
+}
+

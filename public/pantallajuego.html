@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantalla del Juego</title>
+<!--   <script>
+    window.onload = () => {
+      const nombreUsuario = sessionStorage.getItem("nombre");
+
+      if (!nombreUsuario) {
+        window.location.href = "index.html";
+        return;
+      }
+    };
+  </script>-->
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@v0.174.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.174.0/examples/jsm/"
+        }
+      }
+    </script> 
+
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body style="overflow: hidden; background-color: black;">
+  <script type="module" src="./game/js/main.js"></script>
+
+</body>
+
+</html>

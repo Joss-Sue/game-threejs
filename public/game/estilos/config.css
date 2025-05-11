@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+body {
+    background-image: url('../source/fondo2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: "Audiowide", serif;
+}
+.bodyMenu {
+    background-image: url('../source/fondo2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: "Audiowide", serif;
+}
+
+h1 {
+    font-family: "Audiowide", serif;
+    font-size: 36px;
+    color: #ef0d0d;
+    text-align: center;
+    margin-top: 20px;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.bg-primary {
+    background-color: #444d52c8 !important;
+}
+
+.margin-top {
+    margin-top: 30px;
+}
+
+.margin-bottom {
+    margin-bottom: 40px;
+}
+
+.margin-top-boton {
+    margin-top: 20px;
+}
+label{
+    font-size: 25px;
+    color: rgb(139, 211, 255);
+}
+h2,h3{
+    color: rgb(99, 237, 253);
+    font-size: 50px; 
+
+}
+input{
+    box-shadow: 0px 17px 52px -6px rgba(52, 49, 11, 1);
+}
+html::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background-color: black;
+}
+
+html::-webkit-scrollbar-thumb {
+   background-color: rgb(241, 241, 137);
+   border-radius: 30px;
+   height: 20px;
+    
+}
+.tarConfig{
+    background-color: rgba(8, 8, 29, 0.611) !important;
+    border-radius: 10px;
+    box-shadow: 0px 17px 52px -6px rgb(33, 11, 52);
+    backdrop-filter: blur(10px);
+
+}
+#dropdownMenuButton{
+    background-color: rgb(136, 136, 221);
+}
+.btnRegresar{
+    background-color: rgb(241, 155, 155);
+    border-color: rgb(241, 155, 155);
+    transition: .3s ease-in-out;
+}
+.btnRegresar:hover{
+    background-color: red;
+    border-color: red;
+}
