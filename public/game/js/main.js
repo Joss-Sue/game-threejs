@@ -1,21 +1,22 @@
 import * as THREE from 'three';
-import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { FBXLoader } from '../node_modules/three/examples/jsm/loaders/FBXLoader.js';
-import { OBJLoader } from '../node_modules/three/examples/jsm/loaders/OBJLoader.js';
-import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
-import { texturaDron } from '../Modelos/PER_PRIN/PP_1/scriptTXT_PP1.js';
-import { texturaDron2 } from '../Modelos/PER_PRIN/PP_2/scriptTXT_PP2.js';
-import { texturaESC1 } from '../Modelos/ESCENARIOS/ESC1/scriptTXT_ESC1.js';
-import { texturaGALAXY } from '../Modelos/ESCENARIOS/SKYBOX/scriptTXT_SKY.js';
-import { texturaEnemy1 } from '../Modelos/ENEMIGOS/ENEMY_1/scriptTXT_EN1.js';
-import { texturaENEM2 } from '../Modelos/ENEMIGOS/ENEMY_2/scriptTXT_EN2.js';
-import { texturasatelite } from '../Modelos/ambientacion/satelite/scriptTXT_satelite.js';
-import { texturagalileo } from '../Modelos/ambientacion/galileo/scriptTXT.galileo.js';
-import { MTLLoader } from '../node_modules/three/examples/jsm/loaders/MTLLoader.js';
-import { texturaBaseMilitar } from '../Modelos/ambientacion/baseMilitar/texturaBaseMilitar.js';
-import { texturaEdificio } from '../Modelos/ambientacion/edificio/texturaEdificio.js';
-import { texturaNave } from '../Modelos/ambientacion/nave/texturaNave.js';
-import { texturaPuertoEspcial } from '../Modelos/ambientacion/puertoEspacial/texturaPuertoEspacial.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { texturaDron } from '/game/Modelos/PER_PRIN/PP_1/scriptTXT_PP1.js';
+import { texturaDron2 } from '/game/Modelos/PER_PRIN/PP_2/scriptTXT_PP2.js';
+import { texturaESC1 } from '/game/Modelos/ESCENARIOS/ESC1/scriptTXT_ESC1.js';
+import { texturaGALAXY } from '/game/Modelos/ESCENARIOS/SKYBOX/scriptTXT_SKY.js';
+import { texturaEnemy1 } from '/game/Modelos/ENEMIGOS/ENEMY_1/scriptTXT_EN1.js';
+import { texturaENEM2 } from '/game/Modelos/ENEMIGOS/ENEMY_2/scriptTXT_EN2.js';
+import { texturasatelite } from '/game/Modelos/ambientacion/satelite/scriptTXT_satelite.js';
+import { texturagalileo } from '/game/Modelos/ambientacion/galileo/scriptTXT.galileo.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { texturaBaseMilitar } from '/game/Modelos/ambientacion/baseMilitar/texturaBaseMilitar.js';
+import { texturaEdificio } from '/game/Modelos/ambientacion/edificio/texturaEdificio.js';
+import { texturaNave } from '/game/Modelos/ambientacion/nave/texturaNave.js';
+import { texturaPuertoEspcial } from '/game/Modelos/ambientacion/puertoEspacial/texturaPuertoEspacial.js';
 
 
 
@@ -214,7 +215,7 @@ const teclasPresionadas = {
 const mouse = new THREE.Vector2();
 
 const ModeloPP = new FBXLoader();
-ModeloPP.load('./Modelos/PER_PRIN/PP_1/DRONE.fbx', function (object) {
+ModeloPP.load('/game/Modelos/PER_PRIN/PP_1/DRONE.fbx', function (object) {
     if (object instanceof THREE.Object3D) {
         object.traverse(function (child) {
             if (child.isMesh) {
@@ -342,7 +343,7 @@ function actualizarCamara() {
 
 // Cargar otro modelo FBX para el segundo personaje
 const ModeloPP2 = new FBXLoader();
-ModeloPP2.load('./Modelos/PER_PRIN/PP_1/DRONE.fbx', function (object) {
+ModeloPP2.load('/game/Modelos/PER_PRIN/PP_1/DRONE.fbx', function (object) {
     if (object instanceof THREE.Object3D) {
         object.traverse(function (child) {
             if (child.isMesh) {
@@ -386,7 +387,7 @@ ModeloPP2.load('./Modelos/PER_PRIN/PP_1/DRONE.fbx', function (object) {
 
 // Cargar escenario 1
 const Escenario1 = new FBXLoader();
-Escenario1.load('./Modelos/ESCENARIOS/ESC1/ESC1.fbx', function (object) {
+Escenario1.load('/game/Modelos/ESCENARIOS/ESC1/ESC1.fbx', function (object) {
     if (object instanceof THREE.Object3D) {
         object.traverse(function (child) {
             if (child.isMesh) {
@@ -405,7 +406,7 @@ Escenario1.load('./Modelos/ESCENARIOS/ESC1/ESC1.fbx', function (object) {
 
 // Cargar Skybox 
 const Skybox = new FBXLoader();
-Skybox.load('./Modelos/ESCENARIOS/SKYBOX/GALAXY_2.fbx', function (object) {
+Skybox.load('/game/Modelos/ESCENARIOS/SKYBOX/GALAXY_2.fbx', function (object) {
     if (object instanceof THREE.Object3D) {
         object.traverse(function (child) {
             if (child.isMesh) {
@@ -424,7 +425,7 @@ Skybox.load('./Modelos/ESCENARIOS/SKYBOX/GALAXY_2.fbx', function (object) {
 
 //Cargar enemigos
 const Enemy1 = new FBXLoader();
-Enemy1.load('./Modelos/ENEMIGOS/ENEMY_1/ENEMY1.fbx', function (object) {
+Enemy1.load('/game/Modelos/ENEMIGOS/ENEMY_1/ENEMY1.fbx', function (object) {
     if (object instanceof THREE.Object3D) {
         object.traverse(function (child) {
             if (child.isMesh) {
@@ -468,7 +469,7 @@ Enemy1.load('./Modelos/ENEMIGOS/ENEMY_1/ENEMY1.fbx', function (object) {
 
 // Cargar otro modelo FBX para el segundo personaje
 const Enemy2 = new FBXLoader();
-Enemy2.load('./Modelos/ENEMIGOS/ENEMY_2/BUG.fbx', function (object) {
+Enemy2.load('/game/Modelos/ENEMIGOS/ENEMY_2/BUG.fbx', function (object) {
     object.traverse(function (child) {
         if (child.isMesh) {
             child.material = texturaENEM2;
@@ -482,7 +483,7 @@ Enemy2.load('./Modelos/ENEMIGOS/ENEMY_2/BUG.fbx', function (object) {
     const mixer = new THREE.AnimationMixer(object);
 
     // 🔹 Ahora cargamos las animaciones desde otro archivo
-    Enemy2.load('./Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', function (anim) {
+    Enemy2.load('/game/Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', function (anim) {
         if (anim.animations.length > 0) {
             const clip = anim.animations[0]; // Toma la primera animación
             const action = mixer.clipAction(clip);

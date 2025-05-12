@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 // Cargar las texturas
 const loader = new THREE.TextureLoader();
-const baseColor = loader.load('Modelos/PER_PRIN/PP_1/DR_BC.png');
-const normalMap = loader.load('Modelos/PER_PRIN/PP_1/DR_NO.png');
-const roughnessMap = loader.load('Modelos/PER_PRIN/PP_1/DR_RO.png');
-const opacityMap = loader.load('Modelos/PER_PRIN/PP_1/DR_OP.png');
-const emissiveMap = loader.load('Modelos/PER_PRIN/PP_1/DR_EM.png');
-const metalnessMap = loader.load('Modelos/PER_PRIN/PP_1/DR_ME.png');
+const baseColor = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_BC.png');
+const normalMap = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_NO.png');
+const roughnessMap = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_RO.png');
+const opacityMap = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_OP.png');
+const emissiveMap = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_EM.png');
+const metalnessMap = loader.load('/game/Modelos/PER_PRIN/PP_1/DR_ME.png');
 
 // Crear un material y asignarle las texturas
 const texturaDron = new THREE.MeshStandardMaterial({

@@ -2,11 +2,11 @@ import * as THREE from 'three';
 
 // Cargar las texturas
 const loader = new THREE.TextureLoader();
-const baseColor = loader.load('Modelos/ambientacion/nave/texturas/naveDiffuse.jpg');
-const normalMap = loader.load('Modelos/ambientacion/nave/texturas/naveNormal.jpg');
-const roughnessMap = loader.load('Modelos/ambientacion/nave/texturas/naveRoughness.jpg');
-const emissiveMap = loader.load('Modelos/ambientacion/nave/texturas/naveEmission.jpg');
-const metalnessMap = loader.load('Modelos/ambientacion/nave/texturas/naveMetal.jpg');
+const baseColor = loader.load('/game/Modelos/ambientacion/nave/texturas/naveDiffuse.jpg');
+const normalMap = loader.load('/game/Modelos/ambientacion/nave/texturas/naveNormal.jpg');
+const roughnessMap = loader.load('/game/Modelos/ambientacion/nave/texturas/naveRoughness.jpg');
+const emissiveMap = loader.load('/game/Modelos/ambientacion/nave/texturas/naveEmission.jpg');
+const metalnessMap = loader.load('/game/Modelos/ambientacion/nave/texturas/naveMetal.jpg');
 
 // Crear un material y asignarle las texturas
 const texturaNave = new THREE.MeshStandardMaterial({

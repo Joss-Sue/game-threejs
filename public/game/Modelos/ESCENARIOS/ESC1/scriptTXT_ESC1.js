@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
 const loader= new THREE.TextureLoader();
-const baseColor=loader.load('Modelos/ESCENARIOS/ESC1/ESC1_BC.jpg');
-const roughnessMap=loader.load('Modelos/ESCENARIOS/ESC1/ESC1_RO.jpg');
-const normalMap=loader.load('Modelos/ESCENARIOS/ESC1/ESC1_NO.jpg');
+const baseColor=loader.load('/game/Modelos/ESCENARIOS/ESC1/ESC1_BC.jpg');
+const roughnessMap=loader.load('/game/Modelos/ESCENARIOS/ESC1/ESC1_RO.jpg');
+const normalMap=loader.load('/game/Modelos/ESCENARIOS/ESC1/ESC1_NO.jpg');
 
 const texturaESC1 = new THREE.MeshStandardMaterial({
     map: baseColor, // Base color map
