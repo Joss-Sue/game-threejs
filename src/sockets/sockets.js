@@ -1,51 +1,74 @@
 import Room from '../db/models/roomModel.js';
+import sessionMiddleware from '../config/session.js';
 
 const configurarSockets = (io) => {
+  // Integrar sesión de Express en Socket.io
+  io.use((socket, next) => {
+    sessionMiddleware(socket.request, {}, next);
+  });
+
   io.on('connection', (socket) => {
-    console.log('Nuevo usuario conectado:', socket.id);
+    const user = socket.request.session?.usuario;
 
-    // Cuando un usuario crea una sala
+    if (!user) {
+      console.log('Socket no autenticado:', socket.id);
+      socket.emit('error', 'No autenticado');
+      return;
+    }
+
+    console.log('Nuevo usuario conectado:', socket.id, 'Usuario:', user.nombre);
+
+    // Crear una sala (si no tiene una)
     socket.on('createRoom', async (roomName) => {
-      try {
-        // Verificar si la sala existe en la base de datos
-        const room = await Room.createRoomInDB(roomName);
+  try {
+    let room = await Room.getUserRoom(user._id);
 
-        // Unir al socket a la sala
-        socket.join(roomName);
-        io.to(roomName).emit('message', `Usuario ${socket.id} se unió a la sala ${roomName}`);
-      } catch (error) {
-        console.error(error);
-        socket.emit('error', error.message);
-      }
-    });
+    if (!room) {
+      room = await Room.createRoomInDB(roomName, user._id);
+    }
 
-    // Cuando un usuario se une a una sala
+    socket.join(room.name);
+    const usuarios = io.sockets.adapter.rooms.get(room.name)?.size || 1;
+
+    io.to(room.name).emit(
+      'mensaje',
+      `Usuario ${user.nombre} se unió a la sala ${room.name}. Usuarios en sala: ${usuarios}`
+    );
+  } catch (error) {
+    console.error('Error al crear/unirse a sala propia:', error);
+    socket.emit('error', error.message);
+  }
+});
+
+
+    // Unirse a una sala existente
     socket.on('joinRoom', async (roomName) => {
       try {
-        // Verificar si la sala existe en la base de datos
-        const rooms = await Room.getAllRooms();
-        const roomExists = rooms.some((r) => r.name === roomName);
+        const room = await Room.findOne({ name: roomName });
 
-        if (!roomExists) {
+        if (!room) {
           return socket.emit('error', 'La sala no existe.');
         }
 
-        // Unir al socket a la sala
-        socket.join(roomName);
-        io.to(roomName).emit('message', `Usuario ${socket.id} se unió a la sala ${roomName}`);
+        socket.join(room.name);
+        const usuarios = io.sockets.adapter.rooms.get(room.name)?.size || 1;
+
+        io.to(room.name).emit(
+          'mensaje',
+          `Usuario ${user.nombre} se unió a la sala ${room.name}. Usuarios en sala: ${usuarios}`
+        );
       } catch (error) {
-        console.error(error);
+        console.error('Error al unirse a la sala:', error);
         socket.emit('error', error.message);
       }
     });
 
-    // Cuando un usuario se desconecta
+    // Desconexión
     socket.on('disconnect', () => {
       console.log('Usuario desconectado:', socket.id);
+      // Si necesitas manejar salida de salas, tendrías que llevar un seguimiento adicional.
     });
   });
 };
 
 export default configurarSockets;
-
-

@@ -17,4 +17,15 @@ Content-Type: application/json
   "password": "123456"
   }
 
+### Crear Room
+POST  http://localhost:3000/rooms
+Content-Type: application/json
+
+{
+  "name": "Tester Uno"
+  }
+
+### Obtener Rooms
+GET  http://localhost:3000/rooms
+
   

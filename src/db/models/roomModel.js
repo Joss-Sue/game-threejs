@@ -7,23 +7,40 @@ const roomSchema = new mongoose.Schema({
     required: true,
     unique: true, // Evita duplicados de salas con el mismo nombre
   },
+  creator: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', // Referencia al modelo de Usuario
+    required: true, // Este campo es obligatorio, cada sala debe tener un creador
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-// Método para obtener todas las salas
+// Método para obtener todas las salas (sin excluir la del usuario)
 roomSchema.statics.getAllRooms = async function () {
   try {
-    return await this.find(); // 'this' se refiere al modelo de Sala
+    // Trae todas las salas ordenadas por fecha descendente
+    return await this.find().sort({ createdAt: -1 });
   } catch (error) {
-    throw new Error('Error al obtener las salas');
+    throw new Error('Error al obtener las salas: ' + error.message);
+  }
+};
+
+// Método para obtener la sala propia de un usuario
+roomSchema.statics.getUserRoom = async function (userId) {
+  try {
+    // Buscamos la sala del usuario
+    const room = await this.findOne({ creator: userId });
+    return room; // Si existe, la devolvemos, si no, será null
+  } catch (error) {
+    throw new Error('Error al obtener la sala del usuario: ' + error.message);
   }
 };
 
 // Método para crear una nueva sala
-roomSchema.statics.createRoomInDB = async function (roomName) {
+roomSchema.statics.createRoomInDB = async function (roomName, userId) {
   try {
     // Verificar si la sala ya existe
     const existingRoom = await this.findOne({ name: roomName });
@@ -32,12 +49,26 @@ roomSchema.statics.createRoomInDB = async function (roomName) {
     }
 
     // Crear y guardar la nueva sala
-    const room = new this({ name: roomName });
+    const room = new this({ name: roomName, creator: userId });
     await room.save();
 
     return room;
   } catch (error) {
     throw new Error('Error al crear la sala: ' + error.message);
+  }
+};
+
+roomSchema.statics.deleteRoomById = async function (roomId, userId) {
+  try {
+    const room = await this.findOneAndDelete({ _id: roomId, creator: userId });
+
+    if (!room) {
+      throw new Error('No tienes permiso para eliminar esta sala o no existe');
+    }
+
+    return room;
+  } catch (error) {
+    throw new Error('Error al eliminar la sala: ' + error.message);
   }
 };
 

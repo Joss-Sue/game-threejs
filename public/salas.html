@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salas Públicas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #lista-salas li {
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    #lista-salas li:hover {
+      color: blue;
+      text-decoration: underline;
+    }
+
+    #crear-sala {
+      margin-top: 10px;
+    }
+
+    #mensajes p {
+      color: green;
+      font-size: 14px;
+    }
+
+    #bienvenida {
+      font-weight: bold;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>Salas Públicas</h1>
+
+  <!-- Bienvenida -->
+  <p id="bienvenida">Cargando...</p>
+
+  <!-- Lista de Salas -->
+  <h3>Salas Públicas</h3>
+  <ul id="lista-salas">
+    <!-- Aquí se renderizarán las salas -->
+  </ul>
+
+  <!-- Formulario para Crear o Unirse a una sala -->
+  <h3>Crea o únete a tu sala</h3>
+  <input type="text" id="nueva-sala" placeholder="Nombre de la sala">
+  <button id="crear-sala">Unirse o Crear Sala</button>
+
+  <!-- Mensajes de la Sala -->
+  <div id="mensajes"></div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
