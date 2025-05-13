@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+body {
+    background-image: url('/game/source/fondo2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: "Audiowide", serif;
+}
+.bodyMenu {
+    background-image: url('/game/source/fondo2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: "Audiowide", serif;
+}
+
+.bg-primary {
+    background-color: rgba(2, 37, 37, 0.688) !important;
+}
+
+.margin-top {
+    margin-top: 30px;
+}
+
+.margin-bottom {
+    margin-bottom: 40px;
+}
+
+.margin-top-boton {
+    margin-top: 20px;
+}
+label{
+    font-size: 25px;
+    color: rgb(237, 237, 126);
+}
+h2,h3{
+    color: rgb(59, 252, 249);
+    font-size: 50px; 
+
+}
+
+
+html::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background-color: black;
+}
+
+html::-webkit-scrollbar-thumb {
+   background-color: rgb(241, 241, 137);
+   border-radius: 30px;
+   height: 20px;
+    
+}
+.tarjPunt{
+    border-radius: 10px;
+    box-shadow: 0px 17px 52px -6px rgb(59, 252, 249);
+}
+.Fecha,.pntsJuga{
+    text-align: center;
+}
+
+th{
+    text-align: center;
+    background-color: rgb(59, 252, 249) !important;
+    color: black !important;
+}
+.btnRegresar{
+    background-color: rgb(245, 166, 166);
+    border-color: rgb(245, 166, 166);
+    transition: .3s ease-in-out;
+}
+.btnRegresar:hover{
+    background-color: rgb(239, 35, 35);
+    border-color: rgb(239, 35, 35);
+    box-shadow: 0px 3px 5px 0px rgb(236, 68, 68);
+}

@@ -24,7 +24,7 @@ function checkLoginState() {
         var nombre = sessionStorage.getItem("nombre");
         sessionStorage.setItem("nombre",response.name);
         localStorage.setItem("id",response.id);
-        window.location.href = "menuPrincipal.html";
+        window.location.href = "index.html";
         statusChangeCallback(response);
     });
 }
