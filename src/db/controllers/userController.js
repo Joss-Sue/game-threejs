@@ -26,14 +26,27 @@ class UserController {
     try {
       const user = await User.findUserByEmail(email);
       if (!user || user.password !== password) {
-        return res.status(400).json({ message: 'Correo electrónico o contraseña incorrectos' });
+        return res.status(400).send('Correo electrónico o contraseña incorrectos');
       }
 
-      req.session.usuario = user;
-      return res.status(200).json({ message: 'Inicio de sesión exitoso' });
+      req.session.usuario = {
+        _id: user._id,
+        nombre: user.nombre,
+        email: user.email
+      };
+
+      req.session.save(err => {
+        if (err) {
+          console.error('Error al guardar la sesión:', err);
+          return res.status(500).send('Error al guardar la sesión');
+        }
+
+        // Redirige al usuario al inicio
+        return res.redirect('/index.html'); // o simplemente '/' si tienes una ruta vista definida
+      });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: 'Error en el inicio de sesión' });
+      return res.status(500).send('Error en el inicio de sesión');
     }
   }
 }
