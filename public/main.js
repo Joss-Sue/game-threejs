@@ -9,6 +9,10 @@ async function cargarSalas() {
 
     // Obtener el ID del usuario desde la sesión
     const usuarioResponse = await fetch('/session');
+    if (!usuarioResponse.ok) {
+      window.location.href = '/login.html'; // Redirigir al login si no está autenticado
+      return;
+    }
     const usuario = await usuarioResponse.json();
 
     // Mostrar el nombre del usuario en la bienvenida
@@ -51,7 +55,7 @@ async function cargarSalas() {
 
 // Función para crear una sala
 async function crearSala() {
-  const nombreSala = document.getElementById('nueva-sala').value;
+  const nombreSala = document.getElementById('nueva-sala').value.trim();
 
   if (!nombreSala) {
     alert('Por favor, ingresa un nombre de sala');
@@ -79,6 +83,23 @@ socket.on('iniciar-juego', (nombreSala) => {
   console.log(`Iniciando juego en sala: ${nombreSala}`);
   // Redirigir a la pantalla del juego
   window.location.href = `/pantallajuego.html?sala=${encodeURIComponent(nombreSala)}`;
+});
+
+socket.on('roomCreated', (nombreSala) => {
+  alert(`Sala creada: ${nombreSala}`);
+  cargarSalas(); // Refrescar lista
+});
+
+// Después de unirse a una sala
+socket.on('roomJoined', (nombreSala) => {
+  console.log(`Te has unido a la sala: ${nombreSala}`);
+  cargarSalas(); // Refrescar lista
+});
+
+// Cuando otro usuario crea o se une a una sala
+socket.on('salasActualizadas', () => {
+  console.log('Las salas han cambiado. Actualizando...');
+  cargarSalas();
 });
 
 

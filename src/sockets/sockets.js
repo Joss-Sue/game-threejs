@@ -44,6 +44,13 @@ const configurarSockets = (io) => {
           io.to(room.name).emit('mensaje', 'Ya hay dos jugadores en la sala. ¡Pueden empezar a jugar!');
           io.to(room.name).emit('iniciar-juego', room.name);
         }
+
+         // Emitir al usuario actual
+        socket.emit('roomJoined', room.name);
+
+        // Emitir a otros para que recarguen
+        socket.broadcast.emit('salasActualizadas');
+        
       } catch (error) {
         console.error('Error al unirse a la sala:', error);
         socket.emit('error', error.message);
@@ -59,21 +66,12 @@ const configurarSockets = (io) => {
           room = await Room.createRoomInDB(roomName, user._id);
         }
 
-        socket.join(room.name);
-        const usuarios = io.sockets.adapter.rooms.get(room.name)?.size || 1;
+        // Notificar al creador
+        socket.emit('roomCreated', room.name);
 
-        io.to(room.name).emit(
-          'mensaje',
-          `Usuario ${user.nombre} se unió a la sala ${room.name}. Usuarios en sala: ${usuarios}`
-        );
+        // Notificar a todos los demás para que refresquen
+        socket.broadcast.emit('salasActualizadas');
 
-        configurarJuegoSockets(io, socket, user);
-
-        // Emitir evento iniciar-juego si hay 2 jugadores
-        if (usuarios === 2) {
-          io.to(room.name).emit('mensaje', 'Ya hay dos jugadores en la sala. ¡Pueden empezar a jugar!');
-          io.to(room.name).emit('iniciar-juego', room.name);
-        }
       } catch (error) {
         console.error('Error al crear sala:', error);
         socket.emit('error', error.message);
