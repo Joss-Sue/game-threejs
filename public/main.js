@@ -75,5 +75,12 @@ socket.on('mensaje', (mensaje) => {
   mensajesDiv.appendChild(p);
 });
 
+socket.on('iniciar-juego', (nombreSala) => {
+  console.log(`Iniciando juego en sala: ${nombreSala}`);
+  // Redirigir a la pantalla del juego
+  window.location.href = `/pantallajuego.html?sala=${encodeURIComponent(nombreSala)}`;
+});
+
+
 // Cargar las salas al cargar la página
 window.onload = cargarSalas;
