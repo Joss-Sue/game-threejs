@@ -8,34 +8,61 @@ function configurarJuegoSockets(io, socket, user) {
       jugadoresPorSala[sala] = {};
     }
 
-    const socketsEnSala = io.sockets.adapter.rooms.get(sala);
-    const numeroJugador = socketsEnSala.size; // 1 o 2
+    const jugadores = jugadoresPorSala[sala];
 
-    socket.emit('info-jugador', { nombre: user.nombre, numero: numeroJugador });
+    // Asignar número de jugador disponible (1 o 2)
+    const numeroJugador = Object.values(jugadores).some(j => j.numero === 1) ? 2 : 1;
 
-    jugadoresPorSala[sala][socket.id] = {
+    jugadores[socket.id] = {
+      id: socket.id,
       nombre: user.nombre,
+      numero: numeroJugador,
       posicion: null,
       rotacion: null,
     };
 
-    // Escuchar estado del jugador y reenviar a los demás
+    // Notificar al jugador actual su número
+    socket.emit('info-jugador', {
+      id: socket.id,
+      nombre: user.nombre,
+      numero: numeroJugador,
+    });
+
+    // Enviar a todos los jugadores de la sala la lista de jugadores actual
+    const listaJugadores = Object.values(jugadores).map(j => ({
+      id: j.id,
+      nombre: j.nombre,
+      numero: j.numero
+    }));
+
+    io.to(sala).emit('jugadores-actualizados', listaJugadores);
+
+    // Sincronizar estado de cada jugador
     socket.on('estadoJugador', (estado) => {
-      jugadoresPorSala[sala][socket.id].posicion = estado.posicion;
-      jugadoresPorSala[sala][socket.id].rotacion = estado.rotacion;
+      jugadores[socket.id].posicion = estado.posicion;
+      jugadores[socket.id].rotacion = estado.rotacion;
 
       socket.to(sala).emit('estado-remoto', {
         id: socket.id,
-        ...estado,
+        numero: jugadores[socket.id].numero,
+        posicion: estado.posicion,
+        rotacion: estado.rotacion
       });
     });
 
     socket.on('disconnect', () => {
-      delete jugadoresPorSala[sala][socket.id];
+      delete jugadores[socket.id];
 
-      // Elimina la sala si ya no quedan jugadores
-      if (Object.keys(jugadoresPorSala[sala]).length === 0) {
+      if (Object.keys(jugadores).length === 0) {
         delete jugadoresPorSala[sala];
+      } else {
+        // Notificar a los demás que un jugador se fue
+        const listaActualizada = Object.values(jugadores).map(j => ({
+          id: j.id,
+          nombre: j.nombre,
+          numero: j.numero
+        }));
+        io.to(sala).emit('jugadores-actualizados', listaActualizada);
       }
     });
   });

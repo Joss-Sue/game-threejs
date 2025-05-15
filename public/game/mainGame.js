@@ -7,8 +7,7 @@ import { cargarPP2 } from './models/pp2.js';
 import { configurarSocket, enviarEstado, esJugador1 } from './core/network.js';
 import { setupControles, actualizarMovimiento } from './core/movimiento.js';
 import { actualizarEnemigos } from './models/enemyController.js';
-import { cargarEscenario } from './models/escenario.js'; // ajusta el path si es distinto
-
+import { cargarEscenario } from './models/escenario.js';
 
 const renderer = new WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -16,18 +15,17 @@ document.body.appendChild(renderer.domElement);
 
 let jugadorLocal = null;
 let jugadorRemoto = null;
-
 let estadoRemoto = null;
-
-configurarSocket((pos, rot) => {
-  estadoRemoto = { pos, rot };
-});
 
 setupControles();
 
-async function init() {
-  requestAnimationFrame(animate);
+(async () => {
+  // Esperar configuración del socket
+  await configurarSocket((pos, rot) => {
+    estadoRemoto = { pos, rot };
+  });
 
+  // Cargar modelos según el jugador
   if (esJugador1()) {
     jugadorLocal = await cargarPP1(scene);
     jugadorRemoto = await cargarPP2(scene);
@@ -36,25 +34,21 @@ async function init() {
     jugadorRemoto = await cargarPP1(scene);
   }
 
-  animate();
-
-    await cargarEscenario(scene, 'esc1');
-
-}
+  await cargarEscenario(scene, 'esc1');
+  animate(); // Iniciar animación después de que todo esté listo
+})();
 
 function animate() {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
 
-  // Movimiento y cámara del jugador local
   if (jugadorLocal) {
     actualizarMovimiento(jugadorLocal, camera, 300, delta);
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
   }
 
-  // Aplicar estado al jugador remoto
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
 
@@ -66,7 +60,6 @@ function animate() {
 
   renderer.render(scene, camera);
 }
-
 
 const baseOffset = new THREE.Vector3(0, 300, -200);
 const offset = new THREE.Vector3();
@@ -82,5 +75,3 @@ function actualizarCamara(obj) {
   camera.lookAt(lookAtVec);
 }
 
-
-init();

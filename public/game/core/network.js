@@ -5,35 +5,49 @@ const socket = io();
 let jugadorNumero = null;
 let jugadorNombre = null;
 
-export function configurarSocket(asignarRemoto) {
+export function esJugador1() {
+  return jugadorNumero === 1;
+}
+
+export function getJugadorInfo() {
+  return { nombre: jugadorNombre, numero: jugadorNumero };
+}
+
+// Esta función ahora es async y devuelve una promesa
+export async function configurarSocket(asignarRemoto) {
   return new Promise((resolve) => {
+    // Obtener sala desde la URL
+    const params = new URLSearchParams(window.location.search);
+    const sala = params.get('sala');
+
     socket.on('connect', () => {
-      socket.emit('obtener-info-jugador');
-      socket.emit('unirse-sala', 'sala1');
+      socket.emit('unirse-sala', sala);
     });
 
     socket.on('info-jugador', ({ nombre, numero }) => {
       jugadorNombre = nombre;
       jugadorNumero = numero;
-      resolve(); // Ya sabemos quién es el jugador, podemos continuar
+      resolve(); // ¡Jugador configurado!
     });
 
-    socket.on('estado-remoto', ({ position, rotation }) => {
-      if (!asignarRemoto) return;
-      asignarRemoto(position, rotation);
+    socket.on('estado-remoto', ({ posicion, rotacion }) => {
+      if (typeof asignarRemoto === 'function') {
+        asignarRemoto(posicion, rotacion);
+      }
     });
   });
 }
 
-// Emitir datos planos: x,y,z y quaternion _x,_y,_z,_w
 export function enviarEstado(position, quaternion) {
   socket.emit('estadoJugador', {
-    position: { x: position.x, y: position.y, z: position.z },
-    rotation: { _x: quaternion._x, _y: quaternion._y, _z: quaternion._z, _w: quaternion._w }
+    posicion: { x: position.x, y: position.y, z: position.z },
+    rotacion: {
+      _x: quaternion._x,
+      _y: quaternion._y,
+      _z: quaternion._z,
+      _w: quaternion._w
+    }
   });
 }
 
-export function esJugador1() {
-  return jugadorNumero === 1;
-}
 
