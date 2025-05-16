@@ -20,31 +20,33 @@ let estadoRemoto = null;
 setupControles();
 
 async function init() {
-  /* await configurarSocket((pos, rot) => {
-    estadoRemoto = { pos, rot };
-  });
+  try {
+    await configurarSocket((pos, rot) => {
+      estadoRemoto = { pos, rot };
+    });
 
-  if (esJugador1()) {
-    jugadorLocal = await cargarPP1(scene);
-    jugadorRemoto = await cargarPP2(scene);
-  } else {
-    jugadorLocal = await cargarPP2(scene);
-    jugadorRemoto = await cargarPP1(scene);
-  } */
+    if (esJugador1()) {
+      jugadorLocal = await cargarPP1(scene);
+      jugadorRemoto = await cargarPP2(scene);
+    } else {
+      jugadorLocal = await cargarPP2(scene);
+      jugadorRemoto = await cargarPP1(scene);
+    }
 
-  await cargarEscenario(scene, 'esc1');
-  animate();
+    await cargarEscenario(scene, 'esc1');
+
+    animate();
+  } catch (error) {
+    console.error('Error durante la configuración del juego:', error);
+  }
 }
-
-
-
 
 function animate() {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
 
-  /* if (jugadorLocal) {
+  if (jugadorLocal) {
     actualizarMovimiento(jugadorLocal, camera, 300, delta);
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
@@ -52,12 +54,11 @@ function animate() {
 
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
-
-    if (pos && rot) { 
+    if (pos && rot) {
       jugadorRemoto.position.set(pos.x, pos.y, pos.z);
       jugadorRemoto.quaternion.set(rot._x, rot._y, rot._z, rot._w);
     }
-  } */
+  }
 
   renderer.render(scene, camera);
 }
@@ -77,4 +78,5 @@ function actualizarCamara(obj) {
 }
 
 init();
+
 

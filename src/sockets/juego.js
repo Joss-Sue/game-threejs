@@ -1,72 +1,82 @@
 const jugadoresPorSala = {};
 
-function configurarJuegoSockets(io, socket, user) {
-  socket.on('unirse-sala', (sala) => {
-    socket.join(sala);
-
-    if (!jugadoresPorSala[sala]) {
-      jugadoresPorSala[sala] = {};
-    }
-
-    const jugadores = jugadoresPorSala[sala];
-
-    // Asignar número de jugador disponible (1 o 2)
-    const numeroJugador = Object.values(jugadores).some(j => j.numero === 1) ? 2 : 1;
-
-    jugadores[socket.id] = {
-      id: socket.id,
-      nombre: user.nombre,
-      numero: numeroJugador,
-      posicion: null,
-      rotacion: null,
+function configurarJuegoSockets(io, socket, user, sala) {
+  if (!jugadoresPorSala[sala]) {
+    jugadoresPorSala[sala] = {
+      jugadores: {},
+      numerosDisponibles: [1, 2],
     };
+  }
 
-    // Notificar al jugador actual su número
-    socket.emit('info-jugador', {
-      id: socket.id,
-      nombre: user.nombre,
-      numero: numeroJugador,
-    });
+  const salaData = jugadoresPorSala[sala];
 
-    // Enviar a todos los jugadores de la sala la lista de jugadores actual
-    const listaJugadores = Object.values(jugadores).map(j => ({
-      id: j.id,
-      nombre: j.nombre,
-      numero: j.numero
-    }));
+  if (salaData.numerosDisponibles.length === 0) {
+    socket.emit('salaLlena');
+    return;
+  }
 
-    io.to(sala).emit('jugadores-actualizados', listaJugadores);
+  const numeroJugador = salaData.numerosDisponibles.shift();
 
-    // Sincronizar estado de cada jugador
-    socket.on('estadoJugador', (estado) => {
-      jugadores[socket.id].posicion = estado.posicion;
-      jugadores[socket.id].rotacion = estado.rotacion;
+  salaData.jugadores[socket.id] = {
+    id: socket.id,
+    nombre: user.nombre,
+    numero: numeroJugador,
+    posicion: null,
+    rotacion: null,
+  };
+
+  socket.emit('info-jugador', {
+    id: socket.id,
+    nombre: user.nombre,
+    numero: numeroJugador,
+  });
+
+  const jugadores = Object.values(salaData.jugadores).map(j => ({
+    id: j.id,
+    nombre: j.nombre,
+    numero: j.numero,
+  }));
+
+  io.to(sala).emit('jugadores-actualizados', jugadores);
+
+  socket.on('estadoJugador', (estado) => {
+    const jugador = salaData.jugadores[socket.id];
+    if (jugador) {
+      jugador.posicion = estado.posicion;
+      jugador.rotacion = estado.rotacion;
 
       socket.to(sala).emit('estado-remoto', {
         id: socket.id,
-        numero: jugadores[socket.id].numero,
+        numero: jugador.numero,
         posicion: estado.posicion,
         rotacion: estado.rotacion
       });
-    });
+    }
+  });
 
-    socket.on('disconnect', () => {
-      delete jugadores[socket.id];
+  socket.on('disconnect', () => {
+    const jugador = salaData.jugadores[socket.id];
+    if (!jugador) return;
 
-      if (Object.keys(jugadores).length === 0) {
-        delete jugadoresPorSala[sala];
-      } else {
-        // Notificar a los demás que un jugador se fue
-        const listaActualizada = Object.values(jugadores).map(j => ({
-          id: j.id,
-          nombre: j.nombre,
-          numero: j.numero
-        }));
-        io.to(sala).emit('jugadores-actualizados', listaActualizada);
-      }
-    });
+    delete salaData.jugadores[socket.id];
+    salaData.numerosDisponibles.push(jugador.numero);
+
+    socket.to(sala).emit('jugadorDesconectado', jugador.numero);
+
+    if (Object.keys(salaData.jugadores).length === 0) {
+      delete jugadoresPorSala[sala];
+    } else {
+      const jugadoresRestantes = Object.values(salaData.jugadores).map(j => ({
+        id: j.id,
+        nombre: j.nombre,
+        numero: j.numero,
+      }));
+      io.to(sala).emit('jugadores-actualizados', jugadoresRestantes);
+    }
   });
 }
 
 export default configurarJuegoSockets;
+
+
 
