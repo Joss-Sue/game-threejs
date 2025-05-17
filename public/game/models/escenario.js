@@ -11,7 +11,7 @@ import { texturaNave } from '/game/source/Modelos/ambientacion/nave/texturaNave.
 import { texturaPuertoEspcial } from '/game/source/Modelos/ambientacion/puertoEspacial/texturaPuertoEspacial.js';
 import { texturasatelite } from '/game/source/Modelos/ambientacion/satelite/scriptTXT_satelite.js';
 import { texturagalileo } from '/game/source/Modelos/ambientacion/galileo/scriptTXT.galileo.js';
-
+import { texturaorbe } from '/game/source/Modelos/ambientacion/orbe/scriptTXT_orbe.js';
 
 // Funciones para cargar cada modelo fijo (sin parámetros dinámicos)
 async function cargarEstacion(position, scale, rotation) {
@@ -46,6 +46,21 @@ async function cargarGalileo(position, scale, rotation) {
     }, undefined, reject);
   });
 }
+async function cargarOrbe(position, scale, rotation) {
+  return new Promise((resolve, reject) => {
+    const loader = new OBJLoader();
+    loader.load('/game/source/Modelos/ambientacion/orbe/Done_Orb_Fix.obj', (object) => {
+      object.traverse(child => {
+        if (child.isMesh) child.material = texturaorbe;
+      });
+      if (position) object.position.set(...position);
+      if (scale) object.scale.set(...scale);
+      if (rotation) object.rotation.set(...rotation);
+      resolve(object);
+    }, undefined, reject);
+  });
+}
+
 
 async function cargarBaseMilitar(position, scale, rotation) {
   return new Promise((resolve, reject) => {
@@ -163,6 +178,7 @@ const modelosFijos = [
   cargarSatelite,
   cargarEsc1FBX,
   cargarSkybox,
+  cargarOrbe,
 ];
 
 // Configuración por escenario solo con posición, escala y rotación para cada modelo
@@ -177,6 +193,7 @@ const configuracionesEscenarios = {
     { position: [250, 0, -50], scale: [10, 10, 10], rotation: null },
     { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
+   { position: [300, 0, -50], scale: [5, 5, 5], rotation: null },
   ],
   esc2: [
     { position: [0, 0, 0], scale: [1, 1, 1], rotation: null },
@@ -188,9 +205,20 @@ const configuracionesEscenarios = {
     { position: [200, 0, 0], scale: [15, 15, 15], rotation: null },
     { position: [30, -20, -10], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
+    { position: [300, 0, -50], scale: [5, 5, 5], rotation: null },
   ],
   esc3: [
-    // Otra configuración para escenario 3...
+        { position: [800, 0, -700], scale: [3, 3,3], rotation: null },
+    { position: [-400, 0, 30], scale: [15, 15,15], rotation: null },
+    { position: [500, 10, 500], scale: [80, 80, 80], rotation: null },
+    { position: [-800, 10, 300], scale: [80, 80, 80], rotation: null },
+    { position: [-200, -30, 400], scale: [15,15,15], rotation: null },
+    { position: [-980, 200, -300], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
+    { position: [-250, 0, 50], scale: [5, 5,5], rotation: null },
+    { position: [-60, 35, 50], scale: [1, 1, 1], rotation: null },
+    { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
+   { position: [-300, 0, 50], scale: [10,10,10,], rotation: [0, 3 * Math.PI / 2, 0]  },
+
   ],
 };
 
