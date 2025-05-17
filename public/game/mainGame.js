@@ -33,7 +33,7 @@ async function init() {
       jugadorRemoto = await cargarPP1(scene);
     }
 
-    await cargarEscenario(scene, 'esc1');
+    await cargarEscenario(scene, 'esc3');
 
     animate();
   } catch (error) {

@@ -193,36 +193,36 @@ const configuracionesEscenarios = {
     { position: [250, 0, -50], scale: [10, 10, 10], rotation: null },
     { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
-   { position: [300, 0, -50], scale: [5, 5, 5], rotation: null },
+   { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
   ],
   esc2: [
-    { position: [0, 0, 0], scale: [1, 1, 1], rotation: null },
-    { position: [100, 0, 0], scale: [5, 5, 5], rotation: null },
-    { position: [-300, 0, 100], scale: [60, 60, 60], rotation: null },
-    { position: [500, 0, 200], scale: [50, 50, 50], rotation: null },
-    { position: [300, 50, -200], scale: [20, 20, 20], rotation: null },
-    { position: [700, -150, 100], scale: [40, 40, 40], rotation: [0, Math.PI / 2, 0] },
-    { position: [200, 0, 0], scale: [15, 15, 15], rotation: null },
-    { position: [30, -20, -10], scale: [1, 1, 1], rotation: null },
+         { position: [800, -10, -300], scale: [2, 2, 2], rotation: null },
+    { position: [400, 0, 600], scale: [10, 10, 10], rotation: null },
+    { position: [-500, -10, -800], scale: [80, 80, 80], rotation: null },
+    { position: [-800, 0, 700], scale: [80, 80, 80], rotation: null },
+    { position: [200, 30, 400], scale: [10, 10, 10], rotation: null },
+    { position: [980, -200, 900], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
+    { position: [-250, 0, -50], scale: [10, 10, 10], rotation: null },
+    { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
-    { position: [300, 0, -50], scale: [5, 5, 5], rotation: null },
+   { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
   ],
   esc3: [
-        { position: [800, 0, -700], scale: [3, 3,3], rotation: null },
-    { position: [-400, 0, 30], scale: [15, 15,15], rotation: null },
-    { position: [500, 10, 500], scale: [80, 80, 80], rotation: null },
-    { position: [-800, 10, 300], scale: [80, 80, 80], rotation: null },
-    { position: [-200, -30, 400], scale: [15,15,15], rotation: null },
-    { position: [-980, 200, -300], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
-    { position: [-250, 0, 50], scale: [5, 5,5], rotation: null },
-    { position: [-60, 35, 50], scale: [1, 1, 1], rotation: null },
+      { position: [800, -50, -300], scale: [2, 2, 2], rotation: null },
+    { position: [400, 0, -600], scale: [10, 10, 10], rotation: null },
+    { position: [-800, -50, 700], scale: [80, 80, 80], rotation: null },
+    { position: [-700, -150, -800], scale: [80, 80, 80], rotation: null },
+    { position: [200, -30, 400], scale: [10, 10, 10], rotation: null },
+    { position: [980, -200, 900], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
+    { position: [-250, 0, -50], scale: [10, 10, 10], rotation: null },
+    { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
-   { position: [-300, 0, 50], scale: [10,10,10,], rotation: [0, 3 * Math.PI / 2, 0]  },
+   { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
 
   ],
 };
 
-export async function cargarEscenario(scene, nombreEscenario = 'esc1') {
+export async function cargarEscenario(scene, nombreEscenario = 'esc3') {
   const config = configuracionesEscenarios[nombreEscenario];
   if (!config) return;
   
@@ -234,9 +234,14 @@ export async function cargarEscenario(scene, nombreEscenario = 'esc1') {
       scene.add(objeto);
       // Esperar un pequeño tiempo para no saturar GPU
       await new Promise(resolve => setTimeout(resolve, 100)); 
+      
     } catch (e) {
       //console.error(Error cargando modelo índice ${i}:, e);
     }
   }
   //console.log(Escenario ${nombreEscenario} cargado.);
+  console.log('Configuraciones disponibles:', configuracionesEscenarios);
+console.log('Nombre de escenario recibido:', nombreEscenario);
+
+
 }
