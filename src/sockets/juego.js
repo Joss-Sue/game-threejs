@@ -5,6 +5,14 @@ function configurarJuegoSockets(io, socket, user, sala) {
     jugadoresPorSala[sala] = {
       jugadores: {},
       numerosDisponibles: [1, 2],
+      vidas: {
+        1: 100,
+        2: 100,
+      },
+      enemigo: {
+        vida: 100,
+        activo: true,
+      }
     };
   }
 
@@ -25,10 +33,13 @@ function configurarJuegoSockets(io, socket, user, sala) {
     rotacion: null,
   };
 
+  // Enviar info del jugador y estado inicial de vidas
   socket.emit('info-jugador', {
     id: socket.id,
     nombre: user.nombre,
     numero: numeroJugador,
+    vidas: salaData.vidas,
+    enemigo: salaData.enemigo,
   });
 
   const jugadores = Object.values(salaData.jugadores).map(j => ({
@@ -54,6 +65,34 @@ function configurarJuegoSockets(io, socket, user, sala) {
     }
   });
 
+  // Nuevo: recibir daño a jugador
+  socket.on('danioJugador', ({ numeroJugador, danio }) => {
+    if (!salaData.vidas[numeroJugador]) return;
+    salaData.vidas[numeroJugador] = Math.max(0, salaData.vidas[numeroJugador] - danio);
+
+    // Emitir a todos el estado actualizado
+    io.to(sala).emit('estado-vidas-actualizado', {
+      vidas: salaData.vidas,
+      enemigo: salaData.enemigo,
+    });
+  });
+
+  // Nuevo: recibir daño al enemigo
+  socket.on('danioEnemigo', ({ danio }) => {
+    if (!salaData.enemigo.activo) return;
+
+    salaData.enemigo.vida = Math.max(0, salaData.enemigo.vida - danio);
+
+    if (salaData.enemigo.vida <= 0) {
+      salaData.enemigo.activo = false;
+    }
+
+    io.to(sala).emit('estado-vidas-actualizado', {
+      vidas: salaData.vidas,
+      enemigo: salaData.enemigo,
+    });
+  });
+
   socket.on('disconnect', () => {
     const jugador = salaData.jugadores[socket.id];
     if (!jugador) return;
@@ -77,6 +116,3 @@ function configurarJuegoSockets(io, socket, user, sala) {
 }
 
 export default configurarJuegoSockets;
-
-
-

@@ -5,6 +5,9 @@ export const clock = new THREE.Clock();
 export const clock2 = new THREE.Clock();
 export const clock3 = new THREE.Clock();
 export const clock4 = new THREE.Clock();
+export const clock5 = new THREE.Clock();
+export const clock6 = new THREE.Clock();
+export const clock7 = new THREE.Clock();
 
 // === LUCES ===
 

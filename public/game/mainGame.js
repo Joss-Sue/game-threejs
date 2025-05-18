@@ -1,16 +1,33 @@
+// mainGame.js
 import * as THREE from 'three';
 import { WebGLRenderer } from 'three';
-import { scene, clock, clock2, clock3, clock4 } from './core/scene.js';
+import { scene, clock, clock3, clock4 } from './core/scene.js';
 import { camera } from './core/camera.js';
 import { cargarPP1 } from './models/pp1.js';
 import { cargarPP2 } from './models/pp2.js';
-import { cargarEnemy1 } from './models/enemy1.js';
-import { cargarEnemigo,actualizarEnemigo } from './models/enemyBase.js';
-import { configurarSocket, enviarEstado, esJugador1 } from './core/network.js';
-import { setupControles, actualizarMovimiento } from './core/movimiento.js';
-import { actualizarEnemigos } from './models/enemyController.js';
+import {
+  cargarEnemigo,
+  actualizarEnemigo,
+  aplicarDanioAlEnemigo,
+  getEnemigo,
+} from './models/enemyBase.js';
+
+import {
+  configurarSocket,
+  enviarEstado,
+  esJugador1,
+  notificarMuerteEnemigo,
+  enviarDanioJugador,
+  enviarDanioEnemigo,
+} from './core/network.js';
+
+import {
+  setupControles,
+  actualizarMovimiento,
+  actualizarDisparo,
+} from './core/movimiento.js';
+
 import { cargarEscenario } from './models/escenario.js';
-import { cargarEnemy2 } from './models/enemy2.js';
 
 const renderer = new WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -20,13 +37,59 @@ let jugadorLocal = null;
 let jugadorRemoto = null;
 let estadoRemoto = null;
 
+// Mantener vidas sincronizadas
+let vidasJugadores = { 1: 100, 2: 100 };
+let estadoEnemigo = { vida: 100, activo: true };
+
+const balas = []; // Guardar balas disparadas
+
 setupControles();
 
 async function init() {
   try {
-    await configurarSocket((pos, rot) => {
-      estadoRemoto = { pos, rot };
-    });
+    await configurarSocket(
+      (pos, rot) => {
+        // Actualizar estado remoto de posición y rotación
+        estadoRemoto = { pos, rot };
+      },
+      (estadoVidas) => {
+        // Actualizar las vidas de jugadores y enemigo cuando llegan del servidor
+        if (estadoVidas.vidas) {
+          vidasJugadores = { ...vidasJugadores, ...estadoVidas.vidas };
+        }
+        if (estadoVidas.enemigo) {
+          estadoEnemigo = { ...estadoEnemigo, ...estadoVidas.enemigo };
+          if (!estadoEnemigo.activo) {
+            const enemigo = getEnemigo();
+            if (enemigo) {
+              scene.remove(enemigo);
+              console.log('Enemigo eliminado por sincronización remota');
+            }
+          }
+        }
+
+        // Actualizar vidas visuales en los objetos 3D
+        if (jugadorLocal && vidasJugadores[jugadorLocal.userData.numero] !== undefined) {
+          jugadorLocal.vida = vidasJugadores[jugadorLocal.userData.numero];
+        }
+        if (jugadorRemoto && vidasJugadores[jugadorRemoto.userData.numero] !== undefined) {
+          jugadorRemoto.vida = vidasJugadores[jugadorRemoto.userData.numero];
+        }
+        const enemigo = getEnemigo();
+        if (enemigo) {
+          enemigo.userData.vida = estadoEnemigo.vida;
+        }
+      },
+      () => {
+        // Manejar muerte enemigo
+        const enemigo = getEnemigo();
+        if (enemigo) {
+          scene.remove(enemigo);
+          estadoEnemigo.activo = false;
+          console.log('Enemigo eliminado por notificación remota');
+        }
+      }
+    );
 
     if (esJugador1()) {
       jugadorLocal = await cargarPP1(scene);
@@ -36,11 +99,13 @@ async function init() {
       jugadorRemoto = await cargarPP1(scene);
     }
 
-    await cargarEscenario(scene, 'esc3');
-    //await cargarEnemy1(scene,clock2);
-    //await cargarEnemy2(scene,clock3);
-    await cargarEnemigo(scene, clock4);
+    jugadorLocal.vida = 100;
+    jugadorLocal.userData.numero = esJugador1() ? 1 : 2;
+    jugadorRemoto.vida = 100;
+    jugadorRemoto.userData.numero = esJugador1() ? 2 : 1;
 
+    await cargarEscenario(scene, 'esc3');
+    await cargarEnemigo(scene, clock4);
 
     animate();
   } catch (error) {
@@ -55,15 +120,17 @@ function animate() {
 
   if (jugadorLocal) {
     actualizarMovimiento(jugadorLocal, camera, 300, delta);
+    actualizarDisparo(jugadorLocal, scene, balas);
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
   }
-  
+
   if (jugadorLocal && jugadorRemoto) {
     actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
   } else if (jugadorLocal) {
     actualizarEnemigo([jugadorLocal], clock3);
   }
+
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
     if (pos && rot) {
@@ -72,7 +139,35 @@ function animate() {
     }
   }
 
+  for (let i = balas.length - 1; i >= 0; i--) {
+    const bala = balas[i];
+    bala.mesh.position.add(
+      bala.direccion.clone().multiplyScalar(bala.velocidad * delta)
+    );
+    bala.tiempo -= delta;
 
+    const enemigo = getEnemigo();
+    if (enemigo) {
+      const distancia = bala.mesh.position.distanceTo(enemigo.position);
+      if (distancia < 20) {
+        aplicarDanioAlEnemigo(scene, 20);
+        enviarDanioEnemigo(20); // Enviar daño al servidor para sincronización
+        scene.remove(bala.mesh);
+        balas.splice(i, 1);
+
+        if (enemigo.userData.vida <= 0) {
+          notificarMuerteEnemigo();
+        }
+
+        continue;
+      }
+    }
+
+    if (bala.tiempo <= 0) {
+      scene.remove(bala.mesh);
+      balas.splice(i, 1);
+    }
+  }
 
   renderer.render(scene, camera);
 }
@@ -91,6 +186,16 @@ function actualizarCamara(obj) {
   camera.lookAt(lookAtVec);
 }
 
+// Ejemplo: función para cuando un jugador recibe daño (ejemplo de llamada)
+function cuandoRecibesDanio(numeroJugador, danio) {
+  if (jugadorLocal && jugadorLocal.userData.numero === numeroJugador) {
+    jugadorLocal.vida -= danio;
+    if (jugadorLocal.vida < 0) jugadorLocal.vida = 0;
+  }
+}
+
+// Evento para manejar daño recibido (deberías escucharlo en tu red)
+// Aquí tienes que añadir en configurarSocket algo así para recibir daños a jugador
+// socket.on('danioJugador', ({ numeroJugador, danio }) => { ... })
+
 init();
-
-
