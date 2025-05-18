@@ -2,6 +2,9 @@ import * as THREE from 'three';
 
 export const scene = new THREE.Scene();
 export const clock = new THREE.Clock();
+export const clock2 = new THREE.Clock();
+export const clock3 = new THREE.Clock();
+export const clock4 = new THREE.Clock();
 
 // === LUCES ===
 

@@ -1,13 +1,16 @@
 import * as THREE from 'three';
 import { WebGLRenderer } from 'three';
-import { scene, clock } from './core/scene.js';
+import { scene, clock, clock2, clock3, clock4 } from './core/scene.js';
 import { camera } from './core/camera.js';
 import { cargarPP1 } from './models/pp1.js';
 import { cargarPP2 } from './models/pp2.js';
+import { cargarEnemy1 } from './models/enemy1.js';
+import { cargarEnemigo,actualizarEnemigo } from './models/enemyBase.js';
 import { configurarSocket, enviarEstado, esJugador1 } from './core/network.js';
 import { setupControles, actualizarMovimiento } from './core/movimiento.js';
 import { actualizarEnemigos } from './models/enemyController.js';
 import { cargarEscenario } from './models/escenario.js';
+import { cargarEnemy2 } from './models/enemy2.js';
 
 const renderer = new WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,6 +37,10 @@ async function init() {
     }
 
     await cargarEscenario(scene, 'esc3');
+    //await cargarEnemy1(scene,clock2);
+    //await cargarEnemy2(scene,clock3);
+    await cargarEnemigo(scene, clock4);
+
 
     animate();
   } catch (error) {
@@ -51,7 +58,12 @@ function animate() {
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
   }
-
+  
+  if (jugadorLocal && jugadorRemoto) {
+    actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
+  } else if (jugadorLocal) {
+    actualizarEnemigo([jugadorLocal], clock3);
+  }
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
     if (pos && rot) {
@@ -59,6 +71,8 @@ function animate() {
       jugadorRemoto.quaternion.set(rot._x, rot._y, rot._z, rot._w);
     }
   }
+
+
 
   renderer.render(scene, camera);
 }
