@@ -44,6 +44,7 @@ async function cargarSalas() {
       salasPublicas.forEach(sala => {
         const li = document.createElement('li');
         li.textContent = sala.name;
+        li.className="list-group-item";
         li.onclick = () => unirseASala(sala.name);
         listaSalas.appendChild(li);
       });
