@@ -1,7 +1,7 @@
 import http from 'http';
 import { Server } from 'socket.io';
 import conectarDB from './src/db/config/mongoose.js';
-import configurarSockets from './src/sockets/sockets.js';
+import configurarSockets from './src/sockets/index.js';
 import app from './src/app.js';
 
 const server = http.createServer(app);
