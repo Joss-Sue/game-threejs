@@ -1,30 +1,52 @@
-window.fbAsyncInit = function () {
+  window.fbAsyncInit = function () {
     FB.init({
-        appId: '967801218249860',
-        cookie: true,
-        xfbml: true,
-        version: 'v22.0'
+      appId: '967801218249860',
+      cookie: true,
+      xfbml: true,
+      version: 'v22.0'
     });
 
     FB.AppEvents.logPageView();
+  };
 
-};
-
-(function (d, s, id) {
+  (function (d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) { return; }
+    if (d.getElementById(id)) return;
     js = d.createElement(s); js.id = id;
     js.src = "https://connect.facebook.net/en_US/sdk.js";
     fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
+  }(document, 'script', 'facebook-jssdk'));
 
-
-function checkLoginState() {
-    FB.api('/me', { fields: 'name' },function (response) {
-        var nombre = sessionStorage.getItem("nombre");
-        sessionStorage.setItem("nombre",response.name);
-        localStorage.setItem("id",response.id);
-        window.location.href = "index.html";
-        statusChangeCallback(response);
+  function checkLoginState() {
+    FB.getLoginStatus(function (response) {
+      if (response.status === 'connected') {
+        FB.api('/me', { fields: 'name,email' }, function (fbUser) {
+          // Guarda en sessionStorage/localStorage si quieres
+          sessionStorage.setItem("nombre", fbUser.name);
+          localStorage.setItem("id", fbUser.id);
+          console.log(fbUser);
+          
+          // Envía los datos al backend para iniciar sesión o registrar
+          fetch('/login/facebook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              facebookId: fbUser.id,
+              nombre: fbUser.name,
+              email: fbUser.email // A veces puede ser undefined, ten cuidado
+            })
+          })
+          .then(res => {
+            if (res.ok) {
+              window.location.href = "/index.html";
+            } else {
+              alert("No se pudo iniciar sesión con Facebook");
+            }
+          });
+        });
+      } else {
+        alert('Por favor inicia sesión con Facebook');
+      }
     });
-}
+  }
+

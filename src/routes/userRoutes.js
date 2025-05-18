@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
+router.get('/logout', UserController.logout);
+router.post('/login/facebook', UserController.loginWithFacebook);
 router.get('/session', requiereLogin, (req, res) => { // protegida
   const { nombre, email, _id } = req.session.usuario;
   res.json({ nombre, email, _id });
