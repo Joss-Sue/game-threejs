@@ -5,6 +5,7 @@ let nombreSala = '';
 let mundo = '';
 let nivel = '';
 let modo = '';
+document.getElementById('crear-sala').addEventListener('click', crearSala);
 
 // Función para cargar las salas
 async function cargarSalas() {

@@ -8,7 +8,7 @@ let mixer = null;
 let vida = 100;
 let activo = true;
 
-let velocidadBase = 50;
+let velocidadBase = 150;
 let velocidadActual = velocidadBase;
 
 let tiempoAcumulado = 0;
@@ -17,7 +17,7 @@ export function getEnemigo() {
   return enemigo;
 }
 
-export function cargarEnemigo(scene, clock, posicion = { x: -80, y: -35, z: -50 }, vidaInicial = 100) {
+export function cargarEnemigo(scene, clock, posicion = { x: -80, y: -35, z: -50 }, vidaInicial ) {
   return new Promise((resolve, reject) => {
     const loader = new FBXLoader();
 
@@ -65,13 +65,15 @@ export function actualizarEnemigo(jugadores, clock) {
 
   // Aumentar velocidad y escala cada segundo
   if (tiempoAcumulado >= 1.0) {
-    velocidadActual += 1;
+    velocidadActual += 5;
 
-    const nuevaEscalaX = enemigo.scale.x + 0.03;
-    const nuevaEscalaY = enemigo.scale.y + 0.03;
-    const nuevaEscalaZ = enemigo.scale.z + 0.03;
+    const nuevaEscalaX = Math.min(enemigo.scale.x + 0.03, .7);
+    const nuevaEscalaY = Math.min(enemigo.scale.y + 0.03, .7);
+    const nuevaEscalaZ = Math.min(enemigo.scale.z + 0.03, .7);
 
     enemigo.scale.set(nuevaEscalaX, nuevaEscalaY, nuevaEscalaZ);
+
+
 
     tiempoAcumulado = 0; // reiniciar acumulador
     console.log(`📈 Velocidad: ${velocidadActual.toFixed(2)}, Escala: ${nuevaEscalaX.toFixed(2)}`);
@@ -120,7 +122,7 @@ export function actualizarEnemigo(jugadores, clock) {
       const numJugador = objetivo.userData.numero !== undefined ? objetivo.userData.numero : null;
 
       if (numJugador !== null) {
-        enviarDanioJugador(numJugador, 10);
+        enviarDanioJugador(numJugador, 40,0);
         console.log(`🎯 Jugador ${numJugador} golpeado. Enviando daño al servidor.`);
       } else {
         console.warn('⚠️ El jugador no tiene userData.numero definido');

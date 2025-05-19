@@ -1,6 +1,7 @@
 const jugadoresPorSala = {};
 
 function configurarJuegoSockets(io, socket, user, sala) {
+  console.log(sala,"Este es de configurar");
   if (!jugadoresPorSala[sala]) {
     jugadoresPorSala[sala] = {
       jugadores: {},
@@ -10,7 +11,7 @@ function configurarJuegoSockets(io, socket, user, sala) {
         2: 100,
       },
       enemigo: {
-        vida: 100,
+        vida: 1000,
         activo: true,
       }
     };
@@ -33,7 +34,6 @@ function configurarJuegoSockets(io, socket, user, sala) {
     rotacion: null,
   };
 
-  // Enviar info del jugador y estado inicial de vidas
   socket.emit('info-jugador', {
     id: socket.id,
     nombre: user.nombre,
@@ -65,19 +65,21 @@ function configurarJuegoSockets(io, socket, user, sala) {
     }
   });
 
-  // Nuevo: recibir daño a jugador
-  socket.on('danioJugador', ({ numeroJugador, danio }) => {
+  socket.on('danioJugador', ({ numeroJugador, danio,tipo }) => {
     if (!salaData.vidas[numeroJugador]) return;
-    salaData.vidas[numeroJugador] = Math.max(0, salaData.vidas[numeroJugador] - danio);
+    if(tipo){
+      salaData.vidas[numeroJugador] = Math.max(0, salaData.vidas[numeroJugador] + danio);
+    }else{
+      salaData.vidas[numeroJugador] = Math.max(0, salaData.vidas[numeroJugador] - danio);
+      
+    }
 
-    // Emitir a todos el estado actualizado
     io.to(sala).emit('estado-vidas-actualizado', {
       vidas: salaData.vidas,
       enemigo: salaData.enemigo,
     });
   });
 
-  // Nuevo: recibir daño al enemigo
   socket.on('danioEnemigo', ({ danio }) => {
     if (!salaData.enemigo.activo) return;
 
