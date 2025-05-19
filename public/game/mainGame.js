@@ -5,7 +5,7 @@ import { camera } from './core/camera.js';
 import { cargarPP1 } from './models/pp1.js';
 import { cargarPP2 } from './models/pp2.js';
 import { cargarEnemy1 } from './models/enemy1.js';
-import { cargarEnemigo,actualizarEnemigo } from './models/enemyBase.js';
+import { cargarEnemigo, actualizarEnemigo } from './models/enemyBase.js';
 import { configurarSocket, enviarEstado, esJugador1 } from './core/network.js';
 import { setupControles, actualizarMovimiento } from './core/movimiento.js';
 import { actualizarEnemigos } from './models/enemyController.js';
@@ -21,7 +21,16 @@ let jugadorRemoto = null;
 let estadoRemoto = null;
 
 setupControles();
+const params = new URLSearchParams(window.location.search);
+const nombreSala = params.get('sala');
+const mundo = params.get('mundo');
+const nivel = params.get('nivel');
+const modo = params.get('modo');
 
+console.log('Sala:', nombreSala);
+console.log('Mundo:', mundo);
+console.log('Nivel:', nivel);
+console.log('Modo:', modo);
 async function init() {
   try {
     await configurarSocket((pos, rot) => {
@@ -35,6 +44,24 @@ async function init() {
       jugadorLocal = await cargarPP2(scene);
       jugadorRemoto = await cargarPP1(scene);
     }
+    
+    switch (mundo) {
+  case 'mundo1':
+    scene.background = new THREE.Color(0x87CEEB);
+    await cargarEscenario(scene, 'esc1');
+    break;
+  case 'mundo2':
+    scene.background = new THREE.Color(0xFF6347);
+    await cargarEscenario(scene, 'esc2');
+    break;
+  case 'mundo3':
+    scene.background = new THREE.Color(0x8A2BE2);
+    await cargarEscenario(scene, 'esc3');
+    break;
+  default:
+    // Opcional: algún caso por defecto
+    break;
+}
 
     await cargarEscenario(scene, 'esc3');
     //await cargarEnemy1(scene,clock2);
@@ -58,7 +85,7 @@ function animate() {
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
   }
-  
+
   if (jugadorLocal && jugadorRemoto) {
     actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
   } else if (jugadorLocal) {

@@ -8,7 +8,11 @@ import scoreRoutes from './routes/scoreRoutes.js'
 const app = express()
 
 // Middleware
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
 app.use(express.static('public'))
+
 app.use(express.urlencoded({ extended: true })) // reemplaza body-parser
 app.use(express.json()) // por si usas JSON en tus peticiones
 app.use(sessionConfig)

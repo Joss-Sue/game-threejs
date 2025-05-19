@@ -13,7 +13,7 @@ class UserController {
       const newUser = await User.createUser(username, email, password);
 
       req.session.usuario = newUser;
-      return res.status(201).json({ message: 'Usuario registrado exitosamente' });
+      return res.redirect('/login.html');
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Error al registrar el usuario' });

@@ -1,12 +1,15 @@
 import Room from '../../db/models/roomModel.js';
 
 const handleRoomEvents = (io, socket, user) => {
-  socket.on('createRoom', async (roomName) => {
+  socket.on('createRoom', async (roomData) => {
     try {
+      const { name, mundo, nivel, modo } = roomData;
+
       let room = await Room.getUserRoom(user._id);
       if (!room) {
-        room = await Room.createRoomInDB(roomName, user._id);
+        room = await Room.createRoomInDB(name, user._id, mundo, nivel, modo);
       }
+
       socket.emit('roomCreated', room.name);
       socket.broadcast.emit('salasActualizadas');
     } catch (error) {

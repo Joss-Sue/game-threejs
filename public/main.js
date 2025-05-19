@@ -1,38 +1,38 @@
 const socket = io();
 
+// Variables globales para la sala seleccionada
+let nombreSala = '';
+let mundo = '';
+let nivel = '';
+let modo = '';
+
 // Función para cargar las salas
 async function cargarSalas() {
   try {
-    // Obtener las salas desde el servidor
     const response = await fetch('/rooms');
     const salas = await response.json();
 
-    // Obtener el ID del usuario desde la sesión
     const usuarioResponse = await fetch('/session');
     if (!usuarioResponse.ok) {
-      window.location.href = '/login.html'; // Redirigir al login si no está autenticado
+      window.location.href = '/login.html';
       return;
     }
     const usuario = await usuarioResponse.json();
 
-    // Mostrar el nombre del usuario en la bienvenida
     document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario.nombre}`;
 
-    // Filtrar la sala del usuario, si existe
     const userRoom = salas.find(room => room.userId === usuario._id);
     const salasPublicas = salas.filter(room => room.userId !== usuario._id);
 
-    // Mostrar la sala del usuario si existe
     if (userRoom) {
       document.getElementById('bienvenida').textContent += `, tu sala: ${userRoom.name}`;
       document.getElementById('crear-sala').textContent = 'Unirse a tu sala';
-      document.getElementById('crear-sala').onclick = () => unirseASala(userRoom.name);
+      document.getElementById('crear-sala').onclick = () => unirseASala(userRoom, false);
     } else {
       document.getElementById('crear-sala').textContent = 'Crear Sala';
       document.getElementById('crear-sala').onclick = () => crearSala();
     }
 
-    // Renderizar las salas públicas disponibles
     const listaSalas = document.getElementById('lista-salas');
     listaSalas.innerHTML = '';
 
@@ -43,9 +43,12 @@ async function cargarSalas() {
     } else {
       salasPublicas.forEach(sala => {
         const li = document.createElement('li');
-        li.textContent = sala.name;
-        li.className="list-group-item";
-        li.onclick = () => unirseASala(sala.name);
+        li.innerHTML = `
+          <strong>${sala.name}</strong><br>
+          Mundo: ${sala.world} | Nivel: ${sala.level} | Modo: ${sala.mode}
+        `;
+        li.className = "list-group-item";
+        li.onclick = () => unirseASala(sala, true); // Solo aquí se guardan los datos
         listaSalas.appendChild(li);
       });
     }
@@ -54,22 +57,38 @@ async function cargarSalas() {
   }
 }
 
-// Función para crear una sala
+// Función para crear una sala (sin guardar globales)
 async function crearSala() {
-  const nombreSala = document.getElementById('nueva-sala').value.trim();
+  const nombreSalaInput = document.getElementById('nueva-sala').value.trim();
+  const mundoInput = document.getElementById('mundo').value;
+  const nivelInput = document.getElementById('nivel').value;
+  const modoInput = document.getElementById('modo').value;
 
-  if (!nombreSala) {
+  if (!nombreSalaInput) {
     alert('Por favor, ingresa un nombre de sala');
     return;
   }
 
-  socket.emit('createRoom', nombreSala);
-  document.getElementById('nueva-sala').value = ''; // Limpiar el campo
+  const roomData = {
+    name: nombreSalaInput,
+    mundo: mundoInput,
+    nivel: nivelInput,
+    modo: modoInput
+  };
+
+  socket.emit('createRoom', roomData);
 }
 
 // Función para unirse a una sala
-function unirseASala(nombreSala) {
-  socket.emit('joinRoom', nombreSala);
+function unirseASala(sala, guardarDatos) {
+  if (guardarDatos) {
+    nombreSala = sala.name;
+    mundo = sala.world;
+    nivel = sala.level;
+    modo = sala.mode;
+  }
+
+  socket.emit('joinRoom', sala.name);
 }
 
 // Escuchar mensajes del socket
@@ -80,29 +99,25 @@ socket.on('mensaje', (mensaje) => {
   mensajesDiv.appendChild(p);
 });
 
-socket.on('iniciar-juego', (nombreSala) => {
+// Iniciar el juego con los datos guardados
+socket.on('iniciar-juego', () => {
   console.log(`Iniciando juego en sala: ${nombreSala}`);
-  // Redirigir a la pantalla del juego
-  window.location.href = `/pantallajuego.html?sala=${encodeURIComponent(nombreSala)}`;
+  window.location.href = `/pantallajuego.html?sala=${encodeURIComponent(nombreSala)}&mundo=${encodeURIComponent(mundo)}&nivel=${encodeURIComponent(nivel)}&modo=${encodeURIComponent(modo)}`;
 });
 
 socket.on('roomCreated', (nombreSala) => {
   alert(`Sala creada: ${nombreSala}`);
-  cargarSalas(); // Refrescar lista
+  cargarSalas();
 });
 
-// Después de unirse a una sala
 socket.on('roomJoined', (nombreSala) => {
   console.log(`Te has unido a la sala: ${nombreSala}`);
-  cargarSalas(); // Refrescar lista
+  cargarSalas();
 });
 
-// Cuando otro usuario crea o se une a una sala
 socket.on('salasActualizadas', () => {
   console.log('Las salas han cambiado. Actualizando...');
   cargarSalas();
 });
 
-
-// Cargar las salas al cargar la página
 window.onload = cargarSalas;

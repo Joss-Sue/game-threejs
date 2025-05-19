@@ -16,6 +16,18 @@ const roomSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  world: {
+    type: String,
+    required: true,
+  },
+  level: {
+    type: String,
+    required: true,
+  },
+  mode: {
+    type: String,
+    required: true,
+  },
 });
 
 // Método para obtener todas las salas (sin excluir la del usuario)
@@ -40,7 +52,7 @@ roomSchema.statics.getUserRoom = async function (userId) {
 };
 
 // Método para crear una nueva sala
-roomSchema.statics.createRoomInDB = async function (roomName, userId) {
+roomSchema.statics.createRoomInDB = async function (roomName, userId, mundo, nivel, modo) {
   try {
     // Verificar si la sala ya existe
     const existingRoom = await this.findOne({ name: roomName });
@@ -49,7 +61,7 @@ roomSchema.statics.createRoomInDB = async function (roomName, userId) {
     }
 
     // Crear y guardar la nueva sala
-    const room = new this({ name: roomName, creator: userId });
+    const room = new this({ name: roomName, creator: userId, world: mundo, level: nivel, mode: modo });
     await room.save();
 
     return room;

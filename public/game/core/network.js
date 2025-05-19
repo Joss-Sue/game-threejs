@@ -53,7 +53,7 @@ export async function configurarSocket(asignarRemoto) {
     socket.on('jugadorDesconectado', (numero) => {
       console.warn(`Jugador ${numero} se desconectó.`);
       alert(`Jugador ${numero} se desconectó. Fin de la partida.`);
-      window.location.href = '/lobby';
+      window.location.href = '/login.html';
     });
   });
 }
