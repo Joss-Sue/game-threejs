@@ -47,7 +47,7 @@ const orbes = [];  // Array para controlar orbes activas
 let orbesRecolectadas = 0; // Contador de orbes recolectadas
 let juegoFinalizado = false;
 
-let tiempoRestante =20; // Tiempo inicial en segundos
+let tiempoRestante =60; // Tiempo inicial en segundos
 
 setupControles();
 
@@ -259,7 +259,6 @@ function animate() {
   requestAnimationFrame(animate);
   verificarFinDeJuego();
 
-
   const delta = clock.getDelta();
 
   // Reducir tiempo restante
@@ -267,25 +266,32 @@ function animate() {
     tiempoRestante -= delta;
   }
 
-  if(!juegoFinalizado){
-    if (jugadorLocal && jugadorLocal.vida > 0 ) {
+  if (!juegoFinalizado) {
+    if (jugadorLocal && jugadorLocal.vida > 0) {
       actualizarMovimiento(jugadorLocal, camera, 300, delta);
       restringirPosicionAlMapa(jugadorLocal);
       actualizarDisparo(jugadorLocal, scene, balas);
       enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
       actualizarCamara(jugadorLocal);
     } else if (jugadorLocal) {
-      // Aún actualiza la cámara para no quedarse congelada en una posición vieja
+      // Actualiza la cámara incluso si el jugador está muerto para no congelar la vista
       actualizarCamara(jugadorLocal);
     }
+
+    // Actualizar enemigo sólo si hay al menos un jugador vivo
+    const jugadoresVivos = [jugadorLocal, jugadorRemoto].filter(j => j && j.vida > 0);
+
+    if (jugadoresVivos.length > 0) {
+      actualizarEnemigo(jugadoresVivos, clock3);
+    }
+    
+    // Detectar colisión sólo si ambos jugadores existen
     if (jugadorLocal && jugadorRemoto) {
       detectarColisionEntreJugadoresBox(jugadorLocal, jugadorRemoto);
-      actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
-    } else if (jugadorLocal) {
-      actualizarEnemigo([jugadorLocal], clock3);
     }
   }
-  
+
+  // Actualizar estado remoto (posición y rotación)
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
     if (pos && rot) {
@@ -297,6 +303,7 @@ function animate() {
   // Detectar colisión entre orbes y jugador local
   detectarColisionOrbesJugadorLocal();
 
+  // Actualizar balas y colisiones con enemigo
   for (let i = balas.length - 1; i >= 0; i--) {
     const bala = balas[i];
     bala.mesh.position.add(
@@ -330,6 +337,7 @@ function animate() {
 
   renderer.render(scene, camera);
 }
+
 
 // Mostrar pantalla de fin de juego cuando se acaba el tiempo
 function verificarFinDeJuego() {

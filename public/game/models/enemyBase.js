@@ -11,6 +11,8 @@ let activo = true;
 let velocidadBase = 50;
 let velocidadActual = velocidadBase;
 
+let tiempoAcumulado = 0;
+
 export function getEnemigo() {
   return enemigo;
 }
@@ -34,6 +36,7 @@ export function cargarEnemigo(scene, clock, posicion = { x: -80, y: -35, z: -50 
       vida = vidaInicial;
       activo = true;
       velocidadActual = velocidadBase;
+      tiempoAcumulado = 0;
 
       loader.load('/game/source/Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', (anim) => {
         mixer = new THREE.AnimationMixer(enemigo);
@@ -56,18 +59,55 @@ export function actualizarEnemigo(jugadores, clock) {
   enemigo.visible = true;
 
   const delta = clock.getDelta();
+  tiempoAcumulado += delta;
+
   if (mixer) mixer.update(delta);
 
-  // Buscar jugador más cercano
-  let objetivo = jugadores[0];
-  let distanciaMin = enemigo.position.distanceTo(objetivo.position);
+  // Aumentar velocidad y escala cada segundo
+  if (tiempoAcumulado >= 1.0) {
+    velocidadActual += 1;
 
-  for (let i = 1; i < jugadores.length; i++) {
-    const d = enemigo.position.distanceTo(jugadores[i].position);
-    if (d < distanciaMin) {
-      distanciaMin = d;
-      objetivo = jugadores[i];
+    const nuevaEscalaX = enemigo.scale.x + 0.03;
+    const nuevaEscalaY = enemigo.scale.y + 0.03;
+    const nuevaEscalaZ = enemigo.scale.z + 0.03;
+
+    enemigo.scale.set(nuevaEscalaX, nuevaEscalaY, nuevaEscalaZ);
+
+    tiempoAcumulado = 0; // reiniciar acumulador
+    console.log(`📈 Velocidad: ${velocidadActual.toFixed(2)}, Escala: ${nuevaEscalaX.toFixed(2)}`);
+  }
+
+  // Determinar el objetivo según vida
+  let objetivo = null;
+
+  // Si hay 2 jugadores
+  if (jugadores.length === 2) {
+    const jugador1 = jugadores[0];
+    const jugador2 = jugadores[1];
+
+    const vida1 = jugador1.vida ?? 0;
+    const vida2 = jugador2.vida ?? 0;
+
+    if (vida1 <= 0 && vida2 > 0) {
+      objetivo = jugador2;
+    } else if (vida2 <= 0 && vida1 > 0) {
+      objetivo = jugador1;
+    } else {
+      // Ambos vivos o ambos muertos (en ese caso elige al más cercano)
+      let distanciaMin = enemigo.position.distanceTo(jugador1.position);
+      objetivo = jugador1;
+
+      const d2 = enemigo.position.distanceTo(jugador2.position);
+      if (d2 < distanciaMin) {
+        distanciaMin = d2;
+        objetivo = jugador2;
+      }
     }
+  } else if (jugadores.length === 1) {
+    objetivo = jugadores[0];
+  } else {
+    // No hay jugadores
+    return;
   }
 
   enemigo.lookAt(objetivo.position);
@@ -94,7 +134,7 @@ export function actualizarEnemigo(jugadores, clock) {
   }
 }
 
-// Aplica daño localmente y notifica a servidor
+
 export function aplicarDanioAlEnemigo(scene, danio = 20, id = null) {
   if (!enemigo || !activo) return;
 
@@ -127,23 +167,24 @@ function eliminarEnemigoLocal(scene) {
     }
 
     enemigo.visible = false;
-
     console.log('🧨 Enemigo "muerto" y detenido (oculto en escena)');
   }
 }
 
 function respawnearEnemigo(scene) {
-  vida = 100;
+  vida = 1000;
   activo = true;
 
   velocidadActual += 10;
+  tiempoAcumulado = 0;
+
   console.log(`🔄 Enemigo respawneado con velocidad ${velocidadActual}`);
 
   if (enemigo) {
     enemigo.visible = true;
     enemigo.position.set(-80, -35, -50);
+    enemigo.scale.set(0.3, 0.3, 0.3); // reinicia escala si quieres
 
-    // Recrear mixer y animación
     const loader = new FBXLoader();
     loader.load('/game/source/Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', (anim) => {
       mixer = new THREE.AnimationMixer(enemigo);
@@ -157,8 +198,6 @@ export function eliminarEnemigoRemotamente(id) {
   if (!enemigo) return;
 
   activo = false;
-  if (enemigo) {
-    enemigo.visible = false;
-  }
+  enemigo.visible = false;
   console.log(`Enemigo eliminado remotamente (id: ${id})`);
 }
