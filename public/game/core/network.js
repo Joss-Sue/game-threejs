@@ -9,6 +9,9 @@ const socket = io();
 let jugadorNumero = null;
 let jugadorNombre = null;
 
+// Estado interno para controlar si jugador remoto está activo o no
+let jugadorRemotoActivo = true;
+
 export function esJugador1() {
   return jugadorNumero === 1;
 }
@@ -40,27 +43,37 @@ export async function configurarSocket(asignarRemoto, manejarEstadoVidas, maneja
       socket.emit('iniciarJuego', roomName);
     });
 
-    socket.on('info-jugador', ({ nombre, numero, vidas, enemigos }) => {
+    socket.on('info-jugador', ({ nombre, numero, vidas, enemigo }) => {
       console.log('[Socket] Info jugador recibida:', nombre, numero);
       jugadorNombre = nombre;
       jugadorNumero = numero;
 
+      actualizarUIVidas({ vidas, enemigo });
+
       if (typeof manejarEstadoVidas === 'function') {
-        manejarEstadoVidas({ vidas, enemigos });
+        manejarEstadoVidas({ vidas, enemigo });
       }
 
       resolve();
     });
 
-    socket.on('estado-remoto', ({ posicion, rotacion }) => {
+    // Actualización estado jugador remoto (posición, rotación y si está activo)
+    socket.on('estado-remoto', ({ posicion, rotacion, activo, numero }) => {
+      jugadorRemotoActivo = activo;
+
       if (typeof asignarRemoto === 'function') {
-        asignarRemoto(posicion, rotacion);
+        asignarRemoto(posicion, rotacion, activo);
       }
     });
 
-    socket.on('estado-vidas-actualizado', (estado) => {
+    socket.on('estado-vidas-actualizado', ({ vidas, enemigo }) => {
+      console.log("[DEBUG] Vidas actualizadas:", vidas);
+      console.log("[DEBUG] Enemigo actualizado:", enemigo);
+
+      actualizarUIVidas({ vidas, enemigo });
+
       if (typeof manejarEstadoVidas === 'function') {
-        manejarEstadoVidas(estado);
+        manejarEstadoVidas({ vidas, enemigo });
       }
     });
 
@@ -74,7 +87,7 @@ export async function configurarSocket(asignarRemoto, manejarEstadoVidas, maneja
 
     socket.on('danioEnemigo', ({ danio, id }) => {
       console.log(`[Socket] Daño recibido para enemigo ${id}: ${danio}`);
-      aplicarDanioAlEnemigo(null, danio, id); // `scene` se ignora, ya se maneja dentro de enemyBase
+      aplicarDanioAlEnemigo(null, danio, id);
     });
 
     socket.on('jugadorDesconectado', (numero) => {
@@ -85,17 +98,59 @@ export async function configurarSocket(asignarRemoto, manejarEstadoVidas, maneja
   });
 }
 
-// ✅ Notificar que un enemigo murió (se especifica el ID)
+function actualizarUIVidas({ vidas, enemigo }) {
+  console.log('[DEBUG] Vidas recibidas:', vidas);
+  console.log('[DEBUG] Vida enemigo recibida:', enemigo);
+
+  const vidaJ1 = document.getElementById('vida-j1');
+  const vidaJ2 = document.getElementById('vida-j2');
+  const vidaEnemigo = document.getElementById('vida-enemigo');
+
+  if (!vidaJ1 || !vidaJ2 || !vidaEnemigo) {
+    console.warn('[WARN] Uno o más elementos de vidas no existen en el DOM');
+    return;
+  }
+
+  vidaJ1.innerText = vidas[1];
+  vidaJ2.innerText = vidas[2];
+  vidaEnemigo.innerText = enemigo.vida;
+}
+
+// Actualiza jugador remoto (posición, rotación y visibilidad según "activo")
+export function asignarRemoto(posicion, rotacion, activo) {
+  if (!activo) {
+    if (window.jugadorRemoto) {
+      window.jugadorRemoto.visible = false;
+      window.jugadorRemoto.userData.activo = false;
+    }
+    return;
+  }
+
+  if (window.jugadorRemoto) {
+    window.jugadorRemoto.visible = true;
+    window.jugadorRemoto.userData.activo = true;
+
+    window.jugadorRemoto.position.set(posicion.x, posicion.y, posicion.z);
+    window.jugadorRemoto.quaternion.set(
+      rotacion._x,
+      rotacion._y,
+      rotacion._z,
+      rotacion._w
+    );
+  }
+}
+
+// Emitir muerte enemigo con ID
 export function notificarMuerteEnemigo(id) {
   socket.emit('enemigoMuerto', { id });
 }
 
-// ✅ Enviar daño al enemigo (también se envía el ID)
+// Emitir daño a enemigo con ID
 export function enviarDanioEnemigo(danio, id) {
   socket.emit('danioEnemigo', { danio, id });
 }
 
-// ✅ Enviar estado del jugador local
+// Enviar estado del jugador local (posición y rotación)
 export function enviarEstado(position, quaternion) {
   socket.emit('estadoJugador', {
     posicion: {
@@ -112,7 +167,7 @@ export function enviarEstado(position, quaternion) {
   });
 }
 
-// ✅ Enviar daño a un jugador específico (PvP)
+// Enviar daño a jugador PvP
 export function enviarDanioJugador(numeroJugador, danio) {
   socket.emit('danioJugador', { numeroJugador, danio });
 }

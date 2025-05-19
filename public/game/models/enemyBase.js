@@ -1,12 +1,15 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { texturaENEM2 } from '/game/source/Modelos/ENEMIGOS/ENEMY_2/scriptTXT_EN2.js';
-import { notificarMuerteEnemigo } from '../core/network.js';
+import { notificarMuerteEnemigo, enviarDanioJugador } from '../core/network.js';
 
 let enemigo = null;
 let mixer = null;
 let vida = 100;
 let activo = true;
+
+let velocidadBase = 50;
+let velocidadActual = velocidadBase;
 
 export function getEnemigo() {
   return enemigo;
@@ -30,6 +33,7 @@ export function cargarEnemigo(scene, clock, posicion = { x: -80, y: -35, z: -50 
       enemigo = model;
       vida = vidaInicial;
       activo = true;
+      velocidadActual = velocidadBase;
 
       loader.load('/game/source/Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', (anim) => {
         mixer = new THREE.AnimationMixer(enemigo);
@@ -41,8 +45,15 @@ export function cargarEnemigo(scene, clock, posicion = { x: -80, y: -35, z: -50 
   });
 }
 
-export function actualizarEnemigo(jugadores, clock, velocidad = 50) {
-  if (!enemigo || !activo || jugadores.length === 0) return;
+export function actualizarEnemigo(jugadores, clock) {
+  if (!enemigo) return;
+
+  if (!activo) {
+    enemigo.visible = false;
+    return;
+  }
+
+  enemigo.visible = true;
 
   const delta = clock.getDelta();
   if (mixer) mixer.update(delta);
@@ -60,19 +71,22 @@ export function actualizarEnemigo(jugadores, clock, velocidad = 50) {
   }
 
   enemigo.lookAt(objetivo.position);
-  enemigo.translateZ(velocidad * delta);
+  enemigo.translateZ(velocidadActual * delta);
 
   // Colisión con jugador
   const distancia = enemigo.position.distanceTo(objetivo.position);
   if (distancia < 60) {
     if (!enemigo._cooldown) {
-      objetivo.vida = Math.max(0, objetivo.vida - 10);
+      const numJugador = objetivo.userData.numero !== undefined ? objetivo.userData.numero : null;
 
-      const numJugador = objetivo.userData.numero !== undefined ? objetivo.userData.numero : '?';
-      console.log(`🎯 Jugador ${numJugador} golpeado. Vida restante: ${objetivo.vida}`);
+      if (numJugador !== null) {
+        enviarDanioJugador(numJugador, 10);
+        console.log(`🎯 Jugador ${numJugador} golpeado. Enviando daño al servidor.`);
+      } else {
+        console.warn('⚠️ El jugador no tiene userData.numero definido');
+      }
 
       enemigo._cooldown = true;
-
       setTimeout(() => {
         if (enemigo) enemigo._cooldown = false;
       }, 1000);
@@ -80,7 +94,8 @@ export function actualizarEnemigo(jugadores, clock, velocidad = 50) {
   }
 }
 
-export function aplicarDanioAlEnemigo(scene, danio = 20) {
+// Aplica daño localmente y notifica a servidor
+export function aplicarDanioAlEnemigo(scene, danio = 20, id = null) {
   if (!enemigo || !activo) return;
 
   vida -= danio;
@@ -88,7 +103,12 @@ export function aplicarDanioAlEnemigo(scene, danio = 20) {
 
   if (vida <= 0) {
     eliminarEnemigoLocal(scene);
-    notificarMuerteEnemigo(); // ← Avisar al otro cliente
+    notificarMuerteEnemigo(id);
+
+    // Respawn después de 5 seg con mayor velocidad
+    setTimeout(() => {
+      respawnearEnemigo(scene);
+    }, 5000);
   }
 }
 
@@ -100,33 +120,45 @@ function eliminarEnemigoLocal(scene) {
       enemigo._cooldown = false;
     }
 
-    if (enemigo.parent) {
-      enemigo.parent.remove(enemigo);
-    }
-
     if (mixer) {
       mixer.stopAllAction();
       mixer.uncacheRoot(enemigo);
       mixer = null;
     }
 
-    enemigo = null;
+    enemigo.visible = false;
 
-    console.log('🧨 Enemigo eliminado');
+    console.log('🧨 Enemigo "muerto" y detenido (oculto en escena)');
   }
 }
 
-export function eliminarEnemigoRemotamente() {
-  if (!enemigo || !activo) return;
-
-  console.log('Enemigo eliminado por sincronización remota');
-  eliminarEnemigoLocal(enemigo.parent || { remove: () => {} }); // seguridad por si no tiene parent
-}
-
-export function resetEnemigo(scene, vidaInicial = 100) {
-  vida = vidaInicial;
+function respawnearEnemigo(scene) {
+  vida = 100;
   activo = true;
-  if (enemigo && !scene.children.includes(enemigo)) {
-    scene.add(enemigo);
+
+  velocidadActual += 10;
+  console.log(`🔄 Enemigo respawneado con velocidad ${velocidadActual}`);
+
+  if (enemigo) {
+    enemigo.visible = true;
+    enemigo.position.set(-80, -35, -50);
+
+    // Recrear mixer y animación
+    const loader = new FBXLoader();
+    loader.load('/game/source/Modelos/ENEMIGOS/ENEMY_2/BUG_WALK.fbx', (anim) => {
+      mixer = new THREE.AnimationMixer(enemigo);
+      const action = mixer.clipAction(anim.animations[0]);
+      action.play();
+    });
   }
+}
+
+export function eliminarEnemigoRemotamente(id) {
+  if (!enemigo) return;
+
+  activo = false;
+  if (enemigo) {
+    enemigo.visible = false;
+  }
+  console.log(`Enemigo eliminado remotamente (id: ${id})`);
 }

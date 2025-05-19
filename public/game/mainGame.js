@@ -1,4 +1,3 @@
-// mainGame.js
 import * as THREE from 'three';
 import { WebGLRenderer } from 'three';
 import { scene, clock, clock3, clock4 } from './core/scene.js';
@@ -29,6 +28,9 @@ import {
 
 import { cargarEscenario } from './models/escenario.js';
 
+// Importa la función y material de la orbe con modelo OBJ
+import { cargarOrbe } from './models/orbes.js';
+
 const renderer = new WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -41,10 +43,14 @@ let vidasJugadores = { 1: 100, 2: 100 };
 let estadoEnemigo = { vida: 100, activo: true };
 
 const balas = [];
+const orbes = [];  // Array para controlar orbes activas
+let orbesRecolectadas = 0; // Contador de orbes recolectadas
+let juegoFinalizado = false;
+
+let tiempoRestante =20; // Tiempo inicial en segundos
 
 setupControles();
 
-// Límites del mapa cuadrado
 const limitesMapa = {
   minX: -1500,
   maxX: 1500,
@@ -52,7 +58,6 @@ const limitesMapa = {
   maxZ: 1300,
 };
 
-// Restricción del jugador a los límites
 function restringirPosicionAlMapa(obj) {
   if (!obj || !obj.position) return;
 
@@ -62,6 +67,22 @@ function restringirPosicionAlMapa(obj) {
   if (obj.position.x > maxX) obj.position.x = maxX;
   if (obj.position.z < minZ) obj.position.z = minZ;
   if (obj.position.z > maxZ) obj.position.z = maxZ;
+}
+
+// Función para generar orbes con modelo OBJ y texturas, en posiciones aleatorias
+async function generarOrbesRandom(cantidad = 10) {
+  const nuevasOrbes = [];
+  for (let i = 0; i < cantidad; i++) {
+    const x = Math.random() * (limitesMapa.maxX - limitesMapa.minX) + limitesMapa.minX;
+    const z = Math.random() * (limitesMapa.maxZ - limitesMapa.minZ) + limitesMapa.minZ;
+    const y = 20; // altura para que no estén pegadas al suelo
+
+    // Carga el modelo orbe con su textura
+    const orbe = await cargarOrbe([x, y, z], [.05, .05, .05], [0, 0, 0]);
+    scene.add(orbe);
+    nuevasOrbes.push(orbe);
+  }
+  return nuevasOrbes;
 }
 
 async function init() {
@@ -80,7 +101,6 @@ async function init() {
             const enemigo = getEnemigo();
             if (enemigo) {
               scene.remove(enemigo);
-              console.log('Enemigo eliminado por sincronización remota');
             }
           }
         }
@@ -101,7 +121,6 @@ async function init() {
         if (enemigo) {
           scene.remove(enemigo);
           estadoEnemigo.activo = false;
-          console.log('Enemigo eliminado por notificación remota');
         }
       }
     );
@@ -123,6 +142,16 @@ async function init() {
     await cargarEnemigo(scene, clock4);
 
     agregarParedesDelMapa();
+
+    // Generar orbes con modelo OBJ + textura (inicial)
+    const orbesIniciales = await generarOrbesRandom(10);
+    orbes.push(...orbesIniciales);
+
+    // Cada 10 segundos generar nuevas orbes y agregarlas
+    setInterval(async () => {
+      const nuevasOrbes = await generarOrbesRandom(2);
+      orbes.push(...nuevasOrbes);
+    }, 10000);
 
     animate();
   } catch (error) {
@@ -167,7 +196,6 @@ function agregarParedesDelMapa() {
   scene.add(paredDerecha);
 }
 
-
 function detectarColisionEntreJugadoresBox(jugadorA, jugadorB) {
   if (!jugadorA || !jugadorB) return;
 
@@ -184,26 +212,80 @@ function detectarColisionEntreJugadoresBox(jugadorA, jugadorB) {
   }
 }
 
+// Función para detectar colisiones entre orbes y jugador local
+function detectarColisionOrbesJugadorLocal() {
+  if (!jugadorLocal) return;
+
+  const jugadorBox = new THREE.Box3().setFromObject(jugadorLocal);
+
+  for (let i = orbes.length - 1; i >= 0; i--) {
+    const orbe = orbes[i];
+    const orbeBox = new THREE.Box3().setFromObject(orbe);
+
+    if (jugadorBox.intersectsBox(orbeBox)) {
+      // Colisión detectada, eliminar orbe
+      scene.remove(orbe);
+      orbes.splice(i, 1);
+
+      // Incrementar contador de orbes recolectadas
+      orbesRecolectadas++;
+      actualizarHUD();
+
+      console.log('Orbe recolectada!');
+    }
+  }
+}
+
+function actualizarHUD() {
+  // Actualiza el HUD en el HTML
+  const vidaJ1Elem = document.getElementById('vida-j1');
+  const vidaJ2Elem = document.getElementById('vida-j2');
+  const vidaEnemigoElem = document.getElementById('vida-enemigo');
+  const contadorOrbesElem = document.getElementById('contador-orbes');
+  const tiempoRestanteElem = document.getElementById('tiempo-restante');
+
+  if (vidaJ1Elem) vidaJ1Elem.textContent = vidasJugadores[1] ?? 100;
+  if (vidaJ2Elem) vidaJ2Elem.textContent = vidasJugadores[2] ?? 100;
+
+  const enemigo = getEnemigo();
+  if (vidaEnemigoElem) vidaEnemigoElem.textContent = enemigo?.userData?.vida ?? 100;
+
+  if (contadorOrbesElem) contadorOrbesElem.textContent = orbesRecolectadas;
+
+  if (tiempoRestanteElem) tiempoRestanteElem.textContent = Math.max(0, Math.floor(tiempoRestante));
+}
+
 function animate() {
   requestAnimationFrame(animate);
+  verificarFinDeJuego();
+
 
   const delta = clock.getDelta();
 
-  if (jugadorLocal) {
-    actualizarMovimiento(jugadorLocal, camera, 300, delta);
-    restringirPosicionAlMapa(jugadorLocal); // <<--- aquí restringimos movimiento
-    actualizarDisparo(jugadorLocal, scene, balas);
-    enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
-    actualizarCamara(jugadorLocal);
+  // Reducir tiempo restante
+  if (tiempoRestante > 0) {
+    tiempoRestante -= delta;
   }
 
-  if (jugadorLocal && jugadorRemoto) {
-    detectarColisionEntreJugadoresBox(jugadorLocal, jugadorRemoto);
-    actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
-  } else if (jugadorLocal) {
-    actualizarEnemigo([jugadorLocal], clock3);
+  if(!juegoFinalizado){
+    if (jugadorLocal && jugadorLocal.vida > 0 ) {
+      actualizarMovimiento(jugadorLocal, camera, 300, delta);
+      restringirPosicionAlMapa(jugadorLocal);
+      actualizarDisparo(jugadorLocal, scene, balas);
+      enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
+      actualizarCamara(jugadorLocal);
+    } else if (jugadorLocal) {
+      // Aún actualiza la cámara para no quedarse congelada en una posición vieja
+      actualizarCamara(jugadorLocal);
+    }
+    if (jugadorLocal && jugadorRemoto) {
+      detectarColisionEntreJugadoresBox(jugadorLocal, jugadorRemoto);
+      actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
+    } else if (jugadorLocal) {
+      actualizarEnemigo([jugadorLocal], clock3);
+    }
   }
-
+  
   if (jugadorRemoto && estadoRemoto) {
     const { pos, rot } = estadoRemoto;
     if (pos && rot) {
@@ -211,6 +293,9 @@ function animate() {
       jugadorRemoto.quaternion.set(rot._x, rot._y, rot._z, rot._w);
     }
   }
+
+  // Detectar colisión entre orbes y jugador local
+  detectarColisionOrbesJugadorLocal();
 
   for (let i = balas.length - 1; i >= 0; i--) {
     const bala = balas[i];
@@ -241,8 +326,56 @@ function animate() {
     }
   }
 
+  actualizarHUD();
+
   renderer.render(scene, camera);
 }
+
+// Mostrar pantalla de fin de juego cuando se acaba el tiempo
+function verificarFinDeJuego() {
+  if (tiempoRestante <= 0) {
+    mostrarGameOver("⏰ ¡Tiempo agotado!", true); // muestra botón
+  }
+
+  if (jugadorLocal?.vida <= 0) {
+    mostrarGameOver("😵 ¡Has sido derrotado!", false); // NO muestra botón
+  }
+  if (jugadorLocal?.vida <= 0 && tiempoRestante<=0) {
+    mostrarGameOver("😵 ¡Has sido derrotado!", true); // NO muestra botón
+  }
+
+  
+}
+
+
+function mostrarGameOver(mensaje, mostrarBoton = true) {
+  const gameOverDiv = document.getElementById('game-over');
+  const mensajeFinal = document.getElementById('mensaje-final');
+  const botonVolver = document.getElementById('btn-volver');
+
+  if (gameOverDiv && mensajeFinal) {
+    mensajeFinal.textContent = mensaje;
+    gameOverDiv.style.display = 'block';
+
+    if (botonVolver) {
+      botonVolver.style.display = mostrarBoton ? 'inline-block' : 'none';
+    }
+
+    // 🛑 Marcar el juego como finalizado
+    juegoFinalizado = true;
+  }
+}
+
+
+
+// Manejar botón de volver al menú
+const botonVolver = document.getElementById('btn-volver');
+if (botonVolver) {
+  botonVolver.addEventListener('click', () => {
+    window.location.href = 'index.html'; // Cambia si tienes otra ruta al menú
+  });
+}
+
 
 const baseOffset = new THREE.Vector3(0, 300, -200);
 const offset = new THREE.Vector3();
