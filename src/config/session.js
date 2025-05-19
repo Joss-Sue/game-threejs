@@ -4,5 +4,9 @@ export default session({
   secret: 'secreto-super-seguro',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Cambia a true si usas HTTPS
+  rolling: true, // Renueva el tiempo de expiración en cada solicitud
+  cookie: {
+    secure: false,           // Cambia a true si usas HTTPS
+    maxAge: 1000 * 60 * 60   // 1 hora
+  }
 });

@@ -32,11 +32,12 @@ const configurarSockets = (io) => {
 
         socket.join(roomName);
         socket.emit('roomJoined', roomName);
-        io.to(roomName).emit('mensaje', `Jugador ${user.nombre} se unió a la sala`);
+        io.to(roomName).emit('mensaje', `Jugador ${user.nombre} se unió a la sala ${roomName}`);
 
         // 👇 Aquí verificamos si ahora hay 2 jugadores
         const socketsEnSala = io.sockets.adapter.rooms.get(roomName);
         if (socketsEnSala?.size === 2) {
+          io.to(roomName).emit('mensaje', 'Están listos para jugar, cargando...');
           io.to(roomName).emit('iniciar-juego', roomName);
         }
 
@@ -51,18 +52,26 @@ const configurarSockets = (io) => {
       configurarJuegoSockets(io, socket, user, roomName);
     });
 
-    socket.on('createRoom', async (roomName) => {
-      try {
-        let room = await Room.getUserRoom(user._id);
-        if (!room) {
-          room = await Room.createRoomInDB(roomName, user._id);
-        }
-        socket.emit('roomCreated', room.name);
-        socket.broadcast.emit('salasActualizadas');
-      } catch (error) {
-        socket.emit('error', error.message);
-      }
-    });
+    socket.on('createRoom', async (roomData) => {
+  console.log('📥 Evento recibido: createRoom');
+  console.log('➡️ Nombre de la sala recibida:', roomData.name);
+
+  // Asegúrate de que `user` esté definido
+ 
+
+  try {
+    console.log('🛠️ Creando sala en la base de datos...');
+    const room = await Room.createRoomInDB(roomData.name, roomData.user, roomData.mundo, roomData.nivel, roomData.modo);
+
+    console.log('✅ Sala creada:', room);
+    socket.emit('roomCreated', room.name);
+    socket.broadcast.emit('salasActualizadas');
+  } catch (error) {
+    console.error('❌ Error al crear la sala:', error);
+    socket.emit('error', error.message);
+  }
+});
+
   });
 };
 

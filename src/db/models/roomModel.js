@@ -8,9 +8,8 @@ const roomSchema = new mongoose.Schema({
     unique: true, // Evita duplicados de salas con el mismo nombre
   },
   creator: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', // Referencia al modelo de Usuario
-    required: true, // Este campo es obligatorio, cada sala debe tener un creador
+    type: String,
+    required: true // Este campo es obligatorio, cada sala debe tener un creador
   },
   createdAt: {
     type: Date,
@@ -70,9 +69,9 @@ roomSchema.statics.createRoomInDB = async function (roomName, userId, mundo, niv
   }
 };
 
-roomSchema.statics.deleteRoomById = async function (roomId, userId) {
+roomSchema.statics.deleteRoomById = async function (roomName, userId) {
   try {
-    const room = await this.findOneAndDelete({ _id: roomId, creator: userId });
+    const room = await this.findOneAndDelete({ name: roomName, creator: userId });
 
     if (!room) {
       throw new Error('No tienes permiso para eliminar esta sala o no existe');

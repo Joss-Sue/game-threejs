@@ -9,56 +9,101 @@ let modo = '';
 // Función para cargar las salas
 async function cargarSalas() {
   try {
-    const response = await fetch('/rooms');
-    const salas = await response.json();
-
     const usuarioResponse = await fetch('/session');
-    if (!usuarioResponse.ok) {
+    const text = await usuarioResponse.text();
+    let usuario;
+
+    try {
+      usuario = JSON.parse(text);
+    } catch (e) {
       window.location.href = '/login.html';
       return;
     }
-    const usuario = await usuarioResponse.json();
 
-    document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario.nombre}`;
+    const response = await fetch('/rooms');
+    const salas = await response.json();
 
-    const userRoom = salas.find(room => room.userId === usuario._id);
-    const salasPublicas = salas.filter(room => room.userId !== usuario._id);
+    document.getElementById('bienvenida').textContent = `Únete o crea tu sala, ${usuario.nombre}`;
 
-    if (userRoom) {
-      document.getElementById('bienvenida').textContent += `, tu sala: ${userRoom.name}`;
-      document.getElementById('crear-sala').textContent = 'Unirse a tu sala';
-      document.getElementById('crear-sala').onclick = () => unirseASala(userRoom, false);
-    } else {
-      document.getElementById('crear-sala').textContent = 'Crear Sala';
-      document.getElementById('crear-sala').onclick = () => crearSala();
-    }
+    const salasUsuario = salas.filter(room => room.creator === usuario.nombre);
+    const salasPublicas = salas.filter(room => room.creator !== usuario.nombre);
 
-    const listaSalas = document.getElementById('lista-salas');
-    listaSalas.innerHTML = '';
+    const listaSalasPublicas = document.getElementById('lista-salas-publicas');
+    const listaSalasUsuario = document.getElementById('lista-salas-usuario');
 
+    listaSalasPublicas.innerHTML = '';
+    listaSalasUsuario.innerHTML = '';
+
+    // Salas Públicas
     if (salasPublicas.length === 0) {
       const li = document.createElement('li');
-      li.textContent = 'No hay salas públicas disponibles';
-      listaSalas.appendChild(li);
+      li.textContent = 'Aún no hay salas públicas disponibles.';
+      li.className = 'list-group-item';
+      listaSalasPublicas.appendChild(li);
     } else {
       salasPublicas.forEach(sala => {
         const li = document.createElement('li');
+        li.className = 'list-group-item';
         li.innerHTML = `
           <strong>${sala.name}</strong><br>
-          Mundo: ${sala.world} | Nivel: ${sala.level} | Modo: ${sala.mode}
+          Mundo: ${sala.world} | Nivel: ${sala.level} | Modo: ${sala.mode} | Creador: ${sala.creator}
         `;
-        li.className = "list-group-item";
-        li.onclick = () => unirseASala(sala, true); // Solo aquí se guardan los datos
-        listaSalas.appendChild(li);
+        li.onclick = () => unirseASala(sala, true);
+        listaSalasPublicas.appendChild(li);
       });
     }
+
+    // Salas del usuario
+    if (salasUsuario.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'Aún no has creado ninguna sala.';
+      li.className = 'list-group-item';
+      listaSalasUsuario.appendChild(li);
+    } else {
+      salasUsuario.forEach(sala => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-start';
+        li.innerHTML = `
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">${sala.name}</div>
+            Mundo: ${sala.world} | Nivel: ${sala.level} | Modo: ${sala.mode}
+          </div>
+          <button class="btn btn-danger btn-sm eliminar-sala" data-name="${sala.name}" data-creator="${sala.creator}">
+            Eliminar
+          </button>
+        `;
+
+         li.onclick = () => unirseASala(sala, true);
+
+        // Asignar evento al botón de eliminar
+        li.querySelector('.eliminar-sala').onclick = (e) => {
+          e.stopPropagation(); // Evita que se dispare el onClick del LI
+          eliminarSala(sala.name, sala.creator);
+        };
+
+        listaSalasUsuario.appendChild(li);
+      });
+    }
+
   } catch (error) {
     console.error('Error al cargar las salas:', error);
   }
 }
 
+
 // Función para crear una sala (sin guardar globales)
 async function crearSala() {
+  let usuario;
+  const usuarioResponse = await fetch('/session');
+  const text = await usuarioResponse.text();
+  try {
+    usuario = JSON.parse(text);
+  } catch (e) {
+    window.location.href = '/login.html';
+    return;
+  }
+  console.log('Usuario:', usuario);
+
   const nombreSalaInput = document.getElementById('nueva-sala').value.trim();
   const mundoInput = document.getElementById('mundo').value;
   const nivelInput = document.getElementById('nivel').value;
@@ -73,9 +118,10 @@ async function crearSala() {
     name: nombreSalaInput,
     mundo: mundoInput,
     nivel: nivelInput,
-    modo: modoInput
+    modo: modoInput,
+    user: usuario.nombre
   };
-
+  console.log('Creando sala:', roomData);
   socket.emit('createRoom', roomData);
 }
 
