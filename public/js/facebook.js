@@ -1,4 +1,4 @@
-  window.fbAsyncInit = function () {
+window.fbAsyncInit = function () {
     FB.init({
       appId: '967801218249860',
       cookie: true,
@@ -21,22 +21,15 @@
     FB.getLoginStatus(function (response) {
       if (response.status === 'connected') {
         FB.api('/me', { fields: 'name,email' }, function (fbUser) {
-          // Guarda en sessionStorage/localStorage si quieres
-          sessionStorage.setItem("nombre", fbUser.name);
-          localStorage.setItem("id", fbUser.id);
-          console.log(fbUser);
-          
-          // Envía los datos al backend para iniciar sesión o registrar
           fetch('/login/facebook', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               facebookId: fbUser.id,
               nombre: fbUser.name,
-              email: fbUser.email // A veces puede ser undefined, ten cuidado
+              email: fbUser.email
             })
-          })
-          .then(res => {
+          }).then(res => {
             if (res.ok) {
               window.location.href = "/index.html";
             } else {
@@ -49,4 +42,3 @@
       }
     });
   }
-
