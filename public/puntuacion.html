@@ -94,6 +94,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+
+        
+    <script>
+  // Realiza la solicitud GET a la ruta que devuelve los puntajes
+  fetch('/scores')
+    .then(response => response.json())  // Convierte la respuesta en JSON
+    .then(data => {
+      // Selecciona el cuerpo de la tabla
+      const tbody = document.querySelector('table tbody');
+      
+      // Limpia la tabla antes de llenarla
+      tbody.innerHTML = '';
+      
+      // Recorre los datos de los puntajes y agrega filas a la tabla
+      data.forEach(score => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${score.jugador}</td>
+          <td>${new Date(score.fecha).toLocaleDateString()}</td>
+          <td>${score.puntaje}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(error => {
+      console.error('Error al cargar los puntajes:', error);
+    });
+</script>
 </body>
 
 </html>

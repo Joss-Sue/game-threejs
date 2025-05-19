@@ -10,6 +10,8 @@ const io = new Server(server);
 // Conectar a la base de datos
 await conectarDB();
 
+
+
 // Configurar sockets
 configurarSockets(io);
 
