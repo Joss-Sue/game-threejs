@@ -2,38 +2,82 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pantalla del Juego</title>
-<!--   <script>
-    window.onload = () => {
-      const nombreUsuario = sessionStorage.getItem("nombre");
-
-      if (!nombreUsuario) {
-        window.location.href = "index.html";
-        return;
-      }
-    };
-  </script>-->
   <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@v0.174.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.174.0/examples/jsm/"
-        }
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@v0.174.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.174.0/examples/jsm/"
       }
-    </script> 
+    }
+  </script>
 
   <style>
     body {
       margin: 0;
     }
+
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: sans-serif;
+      font-size: 16px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 10px;
+      z-index: 9999;
+      user-select: none;
+    }
+
+    #game-over {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 40px;
+      font-family: sans-serif;
+      font-size: 24px;
+      text-align: center;
+      border-radius: 12px;
+      z-index: 10000;
+    }
+
+    #game-over button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #2196f3;
+      color: white;
+    }
   </style>
 </head>
 
 <body style="overflow: hidden; background-color: black;">
-  <script type="module" src="./game/mainGame.js"></script>
+  <div id="hud">
+    <div>🟥 Vida Jugador 1: <span id="vida-j1">100</span></div>
+    <div>🟦 Vida Jugador 2: <span id="vida-j2">100</span></div>
+    <div>👾 Vida Enemigo: <span id="vida-enemigo">100</span></div>
+    <div>💠 Orbes: <span id="contador-orbes">0</span></div>
+    <div>⏳ Tiempo restante: <span id="tiempo-restante">60</span> s</div>
+  </div>
 
+  <!-- Nuevo div para mensaje de fin de partida -->
+  <div id="game-over">
+    <div id="mensaje-final"></div>
+    <button id="btn-volver">Volver al menú</button>
+  </div>
+
+  <script type="module" src="./game/mainGame.js"></script>
 </body>
 
 </html>

@@ -1,54 +1,44 @@
 import * as THREE from 'three';
-import { notificarRecoleccionOrbe } from '../core/network.js';
+// Importa OBJLoader desde el path correcto
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
-let orbes = [];
-let puntuacionGlobal = 0;
 
-export function crearOrbes(scene, posiciones) {
-  const geometria = new THREE.SphereGeometry(5, 32, 32);
-  // Usamos material clon para que cada orbe tenga su propia instancia
-  posiciones.forEach((pos, index) => {
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xff0000,
-      emissive: 0xff0000,
-      emissiveIntensity: 1,
-    });
-    const orbe = new THREE.Mesh(geometria, material);
-    orbe.position.set(pos.x, pos.y, pos.z);
-    orbe.name = `orbe_${index}`;
-    scene.add(orbe);
-    orbes.push(orbe);
+// Cargar las texturas
+const loader = new THREE.TextureLoader();
+const baseColor = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_BaseColor.png');
+const normalMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_Normal.png');
+const roughnessMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_Roughness.png');
+//const aoMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_AO.png');
+const emissiveMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_Emissive.png');
+//const heightMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_Height.png');
+const metalnessMap = loader.load('/game/source/Modelos/ambientacion/orbe/textures/Done_Orb_Fix_Default_Metallic.png');
+
+// Crear un material y asignarle las texturas
+const texturaorbe = new THREE.MeshStandardMaterial({
+    map: baseColor,
+    normalMap: normalMap, 
+    roughnessMap: roughnessMap, 
+    emissiveMap: emissiveMap, 
+    metalnessMap: metalnessMap, 
+    transparent: true, 
+    emissive: new THREE.Color(0xff0000),
+    metalness: 1.0, 
+    roughness: 0.5 
+});
+
+async function cargarOrbe(position, scale, rotation) {
+  return new Promise((resolve, reject) => {
+    const loader = new OBJLoader();
+    loader.load('/game/source/Modelos/ambientacion/orbe/Done_Orb_Fix.obj', (object) => {
+      object.traverse(child => {
+        if (child.isMesh) child.material = texturaorbe;
+      });
+      if (position) object.position.set(...position);
+      if (scale) object.scale.set(...scale);
+      if (rotation) object.rotation.set(...rotation);
+      resolve(object);
+    }, undefined, reject);
   });
 }
 
-export function actualizarOrbes(scene, jugador) {
-  orbes = orbes.filter((orbe) => {
-    const distancia = orbe.position.distanceTo(jugador.position);
-    if (distancia < 10) {
-      scene.remove(orbe);
-      if (orbe.geometry) orbe.geometry.dispose();
-      if (orbe.material) orbe.material.dispose();
-      puntuacionGlobal += 1;
-      console.log(`🎯 Orbe recolectada. Puntuación global: ${puntuacionGlobal}`);
-      notificarRecoleccionOrbe(orbe.name);
-      return false;
-    }
-    return true;
-  });
-}
-
-export function eliminarOrbePorNombre(scene, nombre) {
-  const orbe = scene.getObjectByName(nombre);
-  if (orbe) {
-    scene.remove(orbe);
-    if (orbe.geometry) orbe.geometry.dispose();
-    if (orbe.material) orbe.material.dispose();
-    orbes = orbes.filter((o) => o.name !== nombre);
-    puntuacionGlobal += 1;
-    console.log(`🎯 Orbe recolectada remotamente. Puntuación global: ${puntuacionGlobal}`);
-  }
-}
-
-export function obtenerPuntuacionGlobal() {
-  return puntuacionGlobal;
-}
+export { texturaorbe, cargarOrbe };
