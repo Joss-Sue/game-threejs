@@ -37,23 +37,40 @@ let jugadorLocal = null;
 let jugadorRemoto = null;
 let estadoRemoto = null;
 
-// Mantener vidas sincronizadas
 let vidasJugadores = { 1: 100, 2: 100 };
 let estadoEnemigo = { vida: 100, activo: true };
 
-const balas = []; // Guardar balas disparadas
+const balas = [];
 
 setupControles();
+
+// Límites del mapa cuadrado
+const limitesMapa = {
+  minX: -1500,
+  maxX: 1500,
+  minZ: -1300,
+  maxZ: 1300,
+};
+
+// Restricción del jugador a los límites
+function restringirPosicionAlMapa(obj) {
+  if (!obj || !obj.position) return;
+
+  const { minX, maxX, minZ, maxZ } = limitesMapa;
+
+  if (obj.position.x < minX) obj.position.x = minX;
+  if (obj.position.x > maxX) obj.position.x = maxX;
+  if (obj.position.z < minZ) obj.position.z = minZ;
+  if (obj.position.z > maxZ) obj.position.z = maxZ;
+}
 
 async function init() {
   try {
     await configurarSocket(
       (pos, rot) => {
-        // Actualizar estado remoto de posición y rotación
         estadoRemoto = { pos, rot };
       },
       (estadoVidas) => {
-        // Actualizar las vidas de jugadores y enemigo cuando llegan del servidor
         if (estadoVidas.vidas) {
           vidasJugadores = { ...vidasJugadores, ...estadoVidas.vidas };
         }
@@ -68,7 +85,6 @@ async function init() {
           }
         }
 
-        // Actualizar vidas visuales en los objetos 3D
         if (jugadorLocal && vidasJugadores[jugadorLocal.userData.numero] !== undefined) {
           jugadorLocal.vida = vidasJugadores[jugadorLocal.userData.numero];
         }
@@ -81,7 +97,6 @@ async function init() {
         }
       },
       () => {
-        // Manejar muerte enemigo
         const enemigo = getEnemigo();
         if (enemigo) {
           scene.remove(enemigo);
@@ -107,9 +122,65 @@ async function init() {
     await cargarEscenario(scene, 'esc3');
     await cargarEnemigo(scene, clock4);
 
+    agregarParedesDelMapa();
+
     animate();
   } catch (error) {
     console.error('Error durante la configuración del juego:', error);
+  }
+}
+
+function agregarParedesDelMapa() {
+  const alturaPared = 200;
+  const espesor = 10;
+  const ancho = limitesMapa.maxX - limitesMapa.minX + espesor;
+  const profundidad = limitesMapa.maxZ - limitesMapa.minZ + espesor;
+
+  const materialInvisible = new THREE.MeshBasicMaterial({ visible: false });
+
+  const paredFrontal = new THREE.Mesh(
+    new THREE.BoxGeometry(ancho, alturaPared, espesor),
+    materialInvisible
+  );
+  paredFrontal.position.set(0, alturaPared / 2, limitesMapa.maxZ + espesor / 2);
+  scene.add(paredFrontal);
+
+  const paredTrasera = new THREE.Mesh(
+    new THREE.BoxGeometry(ancho, alturaPared, espesor),
+    materialInvisible
+  );
+  paredTrasera.position.set(0, alturaPared / 2, limitesMapa.minZ - espesor / 2);
+  scene.add(paredTrasera);
+
+  const paredIzquierda = new THREE.Mesh(
+    new THREE.BoxGeometry(espesor, alturaPared, profundidad),
+    materialInvisible
+  );
+  paredIzquierda.position.set(limitesMapa.minX - espesor / 2, alturaPared / 2, 0);
+  scene.add(paredIzquierda);
+
+  const paredDerecha = new THREE.Mesh(
+    new THREE.BoxGeometry(espesor, alturaPared, profundidad),
+    materialInvisible
+  );
+  paredDerecha.position.set(limitesMapa.maxX + espesor / 2, alturaPared / 2, 0);
+  scene.add(paredDerecha);
+}
+
+
+function detectarColisionEntreJugadoresBox(jugadorA, jugadorB) {
+  if (!jugadorA || !jugadorB) return;
+
+  const boxA = new THREE.Box3().setFromObject(jugadorA);
+  const boxB = new THREE.Box3().setFromObject(jugadorB);
+
+  if (boxA.intersectsBox(boxB)) {
+    console.log('¡Colisión entre pp1 y pp2!');
+
+    const direccion = new THREE.Vector3().subVectors(jugadorA.position, jugadorB.position).normalize();
+    const correccion = direccion.multiplyScalar(10);
+    jugadorA.position.add(correccion);
+    jugadorB.position.sub(correccion);
   }
 }
 
@@ -120,12 +191,14 @@ function animate() {
 
   if (jugadorLocal) {
     actualizarMovimiento(jugadorLocal, camera, 300, delta);
+    restringirPosicionAlMapa(jugadorLocal); // <<--- aquí restringimos movimiento
     actualizarDisparo(jugadorLocal, scene, balas);
     enviarEstado(jugadorLocal.position, jugadorLocal.quaternion);
     actualizarCamara(jugadorLocal);
   }
 
   if (jugadorLocal && jugadorRemoto) {
+    detectarColisionEntreJugadoresBox(jugadorLocal, jugadorRemoto);
     actualizarEnemigo([jugadorLocal, jugadorRemoto], clock3);
   } else if (jugadorLocal) {
     actualizarEnemigo([jugadorLocal], clock3);
@@ -151,14 +224,13 @@ function animate() {
       const distancia = bala.mesh.position.distanceTo(enemigo.position);
       if (distancia < 20) {
         aplicarDanioAlEnemigo(scene, 20);
-        enviarDanioEnemigo(20); // Enviar daño al servidor para sincronización
+        enviarDanioEnemigo(20);
         scene.remove(bala.mesh);
         balas.splice(i, 1);
 
         if (enemigo.userData.vida <= 0) {
           notificarMuerteEnemigo();
         }
-
         continue;
       }
     }
@@ -186,16 +258,11 @@ function actualizarCamara(obj) {
   camera.lookAt(lookAtVec);
 }
 
-// Ejemplo: función para cuando un jugador recibe daño (ejemplo de llamada)
 function cuandoRecibesDanio(numeroJugador, danio) {
   if (jugadorLocal && jugadorLocal.userData.numero === numeroJugador) {
     jugadorLocal.vida -= danio;
     if (jugadorLocal.vida < 0) jugadorLocal.vida = 0;
   }
 }
-
-// Evento para manejar daño recibido (deberías escucharlo en tu red)
-// Aquí tienes que añadir en configurarSocket algo así para recibir daños a jugador
-// socket.on('danioJugador', ({ numeroJugador, danio }) => { ... })
 
 init();

@@ -1,4 +1,4 @@
-import User from '../models/userModel.js';
+import User from '../models/userModel.js'; // Asegúrate de tener este modelo implementado
 
 class UserController {
   static async register(req, res) {
@@ -7,12 +7,12 @@ class UserController {
     try {
       const userExists = await User.findUserByEmail(email);
       if (userExists) {
-        return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
+        return res.status(400).json({ message: 'El correo ya está registrado' });
       }
 
       const newUser = await User.createUser(username, email, password);
-
       req.session.usuario = newUser;
+
       return res.status(201).json({ message: 'Usuario registrado exitosamente' });
     } catch (error) {
       console.error(error);
@@ -41,12 +41,42 @@ class UserController {
           return res.status(500).send('Error al guardar la sesión');
         }
 
-        // Redirige al usuario al inicio
-        return res.redirect('/index.html'); // o simplemente '/' si tienes una ruta vista definida
+        // Redirige al index.html
+        return res.redirect('/index.html');
       });
     } catch (error) {
       console.error(error);
       return res.status(500).send('Error en el inicio de sesión');
+    }
+  }
+
+  static async loginWithFacebook(req, res) {
+    const { facebookId, nombre, email } = req.body;
+
+    if (!facebookId || !nombre) {
+      return res.status(400).send('Datos de Facebook incompletos');
+    }
+
+    try {
+      req.session.usuario = {
+        _id: null, // No existe en la base de datos
+        nombre,
+        email: email || '',
+        facebookId
+      };
+
+      req.session.save(err => {
+        if (err) {
+          console.error('Error al guardar la sesión:', err);
+          return res.status(500).send('Error al guardar sesión');
+        }
+
+        // Redirige al index.html
+        return res.redirect('/index.html');
+      });
+    } catch (error) {
+      console.error('Error en login con Facebook:', error);
+      return res.status(500).send('Error en el servidor');
     }
   }
 
@@ -57,43 +87,9 @@ class UserController {
         return res.status(500).send('Error al cerrar sesión');
       }
 
-      // Redirige al formulario de login
       res.redirect('/login.html');
     });
   }
-
-// AuthController.js
-static async loginWithFacebook(req, res) {
-  const { facebookId, nombre, email } = req.body;
-
-  if (!facebookId || !nombre) {
-    return res.status(400).send('Datos de Facebook incompletos');
-  }
-
-  try {
-    // Solo guarda los datos en la sesión, no en la base de datos
-    req.session.usuario = {
-      nombre,
-      email: email || '',
-      facebookId
-    };
-
-    req.session.save(err => {
-      if (err) {
-        console.error('Error al guardar la sesión:', err);
-        return res.status(500).send('Error al guardar sesión');
-      }
-      return res.status(200).send('Login de Facebook exitoso');
-    });
-  } catch (error) {
-    console.error('Error en login con Facebook:', error);
-    return res.status(500).send('Error en el servidor');
-  }
-}
-
-
-
 }
 
 export default UserController;
-
