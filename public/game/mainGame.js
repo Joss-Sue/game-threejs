@@ -54,6 +54,11 @@ let cantidadOrbes;
 
 
 setupControles();
+const params = new URLSearchParams(window.location.search);
+const nombreSala = params.get('sala');
+const mundo = params.get('mundo');
+const nivel = params.get('nivel');
+const modo = params.get('modo');
 
 export function iniciarMusicaFondo() {
   if (!window.musicaFondo) {
@@ -81,8 +86,6 @@ export function iniciarMusicaFondo() {
     document.addEventListener('touchstart', reproducir);
   }
 }
-
-
 
 // Límites del mapa cuadrado
 const limitesMapa = {
