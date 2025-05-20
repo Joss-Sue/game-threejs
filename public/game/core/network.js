@@ -37,9 +37,11 @@ export async function configurarSocket(asignarRemoto, manejarEstadoVidas, maneja
       reject(new Error('Sala llena'));
     });
 
-    socket.on('roomJoined', (roomName) => {
-      console.log(`[Socket] Unido a sala: ${roomName}`);
-      socket.emit('iniciarJuego', roomName);
+    socket.on('roomJoined', (roomData) => {
+      console.log(`[Socket] Unido a sala: ${roomData.room}`);
+      console.log(`[Socket] Unido a sala: ${roomData}`);
+       localStorage.setItem('roomInfo', JSON.stringify(roomData));
+      socket.emit('iniciarJuego', roomData.room);
     });
 
     socket.on('info-jugador', ({ nombre, numero, vidas, enemigo }) => {
@@ -164,3 +166,17 @@ export function enviarEstado(position, quaternion) {
 export function enviarDanioJugador(numeroJugador, danio,tipo) {
   socket.emit('danioJugador', { numeroJugador, danio,tipo });
 }
+
+export function enviarDatosOrbes(orbesRecolectadas, name, playerNum, rooom) {
+  console.log('networkEnviando datos de orbes recolectadas:', orbesRecolectadas);
+  console.log('networkNombre del jugador:', name);
+  console.log('networkNúmero del jugador:', playerNum);
+  console.log('networkSala:', rooom);
+  socket.emit('orbesRecolectadas', {
+    cantidad: orbesRecolectadas,
+    jugador: playerNum,
+    nombre: name,
+    sala: rooom
+  });
+}
+

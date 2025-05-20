@@ -1,4 +1,6 @@
+import Score  from '../db/models/scoreModel.js';
 const jugadoresPorSala = {};
+const resultadosPorSala = {};
 
 function configurarJuegoSockets(io, socket, user, sala) {
   console.log(sala,"Este es de configurar");
@@ -94,6 +96,65 @@ function configurarJuegoSockets(io, socket, user, sala) {
       enemigo: salaData.enemigo,
     });
   });
+
+ // Esto debe estar definido en un scope superior si no lo estaba
+
+socket.on('orbesRecolectadas', async (dataRoom) => {
+  if (!dataRoom || !dataRoom.sala) {
+    console.warn('⚠️ Evento recibido sin datos válidos:', dataRoom);
+    return;
+  }
+
+  const sala = dataRoom.sala;
+  resultadosPorSala[sala] = resultadosPorSala[sala] || [];
+
+  // Solo guardar si el nombre aún no está registrado en esta sala
+  const nombreYaRegistrado = resultadosPorSala[sala].some(r => r.nombre === dataRoom.nombre);
+  if (!nombreYaRegistrado) {
+    resultadosPorSala[sala].push(dataRoom);
+
+    console.log(`📩 Resultado registrado de ${dataRoom.nombre} (${dataRoom.jugador}) en sala ${sala}: ${dataRoom.orbes} orbes`);
+    console.log(`📊 Estado actual de resultados en sala "${sala}":`, resultadosPorSala[sala]);
+  } else {
+    console.warn(`⚠️ Nombre duplicado "${dataRoom.nombre}" en sala ${sala}. Ignorado.`);
+  }
+
+  // Ejecutar lógica final solo si hay dos resultados únicos
+  if (resultadosPorSala[sala].length === 2) {
+    const [jugador1, jugador2] = resultadosPorSala[sala]; 
+
+    let mensaje;
+    if (jugador1.cantidad > jugador2.cantidad) {
+      mensaje = `${jugador1.nombre} gana con ${jugador1.cantidad} orbes 🏆`;
+      const data = {
+        jugador: jugador1.nombre,
+        rival: jugador2.nombre,
+        puntaje: jugador1.cantidad
+      };
+      await Score.createScore(data);
+    } else if (jugador2.cantidad > jugador1.cantidad) {
+      const data = {
+        jugador: jugador2.nombre,
+        rival: jugador1.nombre,
+        puntaje: jugador2.cantidad
+      };
+     await Score.createScore(data);
+      mensaje = `${jugador2.nombre} gana con ${jugador2.cantidad} orbes 🏆`;
+    } else {
+      mensaje = `Empate con ${jugador1.cantidad} orbes cada uno 🤝`;
+    }
+
+    
+
+    console.log(`🏁 Resultado final en sala "${sala}":`, mensaje);
+    io.to(sala).emit('resultadoFinal', mensaje);
+
+    // Limpiar resultados
+    delete resultadosPorSala[sala];
+    console.log(`🧹 Resultados eliminados para sala "${sala}"`);
+  }
+});
+
 
   socket.on('disconnect', () => {
     const jugador = salaData.jugadores[socket.id];

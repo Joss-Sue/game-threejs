@@ -18,6 +18,7 @@ import {
   notificarMuerteEnemigo,
   enviarDanioJugador,
   enviarDanioEnemigo,
+  enviarDatosOrbes
 } from './core/network.js';
 
 import {
@@ -412,6 +413,20 @@ function verificarFinDeJuego() {
 }
 
 function mostrarGameOver(mensaje, mostrarBoton = true) {
+  let orbesRecolectadas = document.getElementById('contador-orbes').textContent;
+  console.log('🔢 Orbes recolectadas:', orbesRecolectadas);
+
+  const roomData = JSON.parse(localStorage.getItem('roomInfo'));
+  console.log('📦 Datos de roomInfo desde localStorage:', roomData);
+
+  if (!roomData || !roomData.name || roomData.playerNum === undefined) {
+    console.warn('⚠️ Faltan datos de roomInfo. No se enviarán orbes.');
+  } else {
+    enviarDatosOrbes(orbesRecolectadas, roomData.name, roomData.playerNum, roomData.rooom);
+    console.log('📤 Datos enviados a enviarDatosOrbes');
+    
+  }
+
   const gameOverDiv = document.getElementById('game-over');
   const mensajeFinal = document.getElementById('mensaje-final');
   const botonVolver = document.getElementById('btn-volver');
@@ -426,6 +441,7 @@ function mostrarGameOver(mensaje, mostrarBoton = true) {
 
     juegoFinalizado = true;
   }
+  mostrarGameOver = function(){};
 }
 
 const botonVolver = document.getElementById('btn-volver');

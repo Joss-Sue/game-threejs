@@ -31,7 +31,10 @@ const configurarSockets = (io) => {
         }
 
         socket.join(roomName);
-        socket.emit('roomJoined', roomName);
+        const jugadorNumero = numUsuarios === 0 ? 1 : 2;
+        socket.emit('roomJoined', { rooom: roomName, playerNum: jugadorNumero, name: user.nombre });
+        console.log(`[Socket] ${user.nombre} se unió a la sala ${roomName} como jugador ${jugadorNumero} con el nombre ${user.nombre}`);
+        //socket.emit('roomJoined', roomName);
         io.to(roomName).emit('mensaje', `Jugador ${user.nombre} se unió a la sala ${roomName}`);
 
         // 👇 Aquí verificamos si ahora hay 2 jugadores
