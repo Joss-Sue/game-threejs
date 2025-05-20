@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
 import { texturaESC1 } from '/game/source/Modelos/ESCENARIOS/ESC1/scriptTXT_ESC1.js';
-import { texturaGALAXY } from '/game/source/Modelos/ESCENARIOS/SKYBOX/scriptTXT_SKY.js';
+import { texturaGALAXY,texturaGALAXY2,texturaGALAXY3 } from '/game/source/Modelos/ESCENARIOS/SKYBOX/scriptTXT_SKY.js';
 import { texturaBaseMilitar } from '/game/source/Modelos/ambientacion/baseMilitar/texturaBaseMilitar.js';
 import { texturaEdificio } from '/game/source/Modelos/ambientacion/edificio/texturaEdificio.js';
 import { texturaNave } from '/game/source/Modelos/ambientacion/nave/texturaNave.js';
@@ -166,6 +166,34 @@ async function cargarSkybox(position, scale, rotation) {
     }, undefined, reject);
   });
 }
+async function cargarSkybox2(position, scale, rotation) {
+  return new Promise((resolve, reject) => {
+    const loader = new FBXLoader();
+    loader.load('/game/source/Modelos/ESCENARIOS/SKYBOX/GALAXY_2.fbx', (object) => {
+      object.traverse(child => {
+        if (child.isMesh) child.material = texturaGALAXY2;
+      });
+      if (position) object.position.set(...position);
+      if (scale) object.scale.set(...scale);
+      if (rotation) object.rotation.set(...rotation);
+      resolve(object);
+    }, undefined, reject);
+  });
+}
+async function cargarSkybox3(position, scale, rotation) {
+  return new Promise((resolve, reject) => {
+    const loader = new FBXLoader();
+    loader.load('/game/source/Modelos/ESCENARIOS/SKYBOX/GALAXY_2.fbx', (object) => {
+      object.traverse(child => {
+        if (child.isMesh) child.material = texturaGALAXY3;
+      });
+      if (position) object.position.set(...position);
+      if (scale) object.scale.set(...scale);
+      if (rotation) object.rotation.set(...rotation);
+      resolve(object);
+    }, undefined, reject);
+  });
+}
 
 // Arreglo con los métodos de carga en orden fijo
 const modelosFijos = [
@@ -178,6 +206,8 @@ const modelosFijos = [
   cargarSatelite,
   cargarEsc1FBX,
   cargarSkybox,
+  cargarSkybox2,
+  cargarSkybox3,
   cargarOrbe,
 ];
 
@@ -193,6 +223,8 @@ const configuracionesEscenarios = {
     { position: [250, 0, -50], scale: [10, 10, 10], rotation: null },
     { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
    { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
   ],
   esc2: [
@@ -204,7 +236,9 @@ const configuracionesEscenarios = {
     { position: [980, -200, 900], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
     { position: [-250, 0, -50], scale: [10, 10, 10], rotation: null },
     { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
    { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
   ],
   esc3: [
@@ -216,6 +250,8 @@ const configuracionesEscenarios = {
     { position: [980, -200, 900], scale: [50, 50, 50], rotation: [0, 3 * Math.PI / 2, 0] },
     { position: [-250, 0, -50], scale: [10, 10, 10], rotation: null },
     { position: [60, -35, -50], scale: [1, 1, 1], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
+    { position: [0, 0, 0], scale: [0, 0, 0], rotation: null },
     { position: [0, 0, 0], scale: [7, 7, 7], rotation: null },
    { position: [300, 0, -50], scale: [.05,.05,.05], rotation: null },
 
