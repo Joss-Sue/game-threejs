@@ -1,4 +1,32 @@
 const socket = io();
+let musicaFondo;
+
+function iniciarMusica(camera) {
+  // Crear un listener y añadirlo a la cámara
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+
+  // Crear el objeto de audio
+  musicaFondo = new THREE.Audio(listener);
+
+  // Cargar el archivo de audio
+  const audioLoader = new THREE.AudioLoader();
+  audioLoader.load('/game/audio/planckx27s-constant-la-constante-de-planck-127554.mp3', function(buffer) {
+    musicaFondo.setBuffer(buffer);
+    musicaFondo.setLoop(true);
+    musicaFondo.setVolume(0.5);
+    
+    // Reproducir al primer clic en el documento
+    document.body.addEventListener('click', function reproducir() {
+      musicaFondo.play();
+      console.log('🎵 Música iniciada');
+      document.body.removeEventListener('click', reproducir); // Eliminar después de un clic
+    });
+  });
+}
+
+
+
 
 // Variables globales para la sala seleccionada
 let nombreSala = '';
@@ -88,6 +116,12 @@ async function cargarSalas() {
 
   } catch (error) {
     console.error('Error al cargar las salas:', error);
+  }
+
+  window.onload = () => {
+  configurarMusicaFondo(); // Configura el audio
+  reproducirMusicaFondo(); // Inicia la música
+  cargarSalas(); // Cargar las salas al cargar la página
   }
 }
 

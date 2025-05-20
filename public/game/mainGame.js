@@ -54,16 +54,37 @@ let cantidadOrbes;
 
 
 setupControles();
-const params = new URLSearchParams(window.location.search);
-const nombreSala = params.get('sala');
-const mundo = params.get('mundo');
-const nivel = params.get('nivel');
-const modo = params.get('modo');
 
-console.log('Sala:', nombreSala);
-console.log('Mundo:', mundo);
-console.log('Nivel:', nivel);
-console.log('Modo:', modo);
+export function iniciarMusicaFondo() {
+  if (!window.musicaFondo) {
+    const audio = new Audio('/game/audio/planckx27s-constant-la-constante-de-planck-127554.mp3');
+    audio.loop = true;
+
+    // Leer volumen guardado desde localStorage (o por defecto 0.5)
+    let volumenGuardado = parseFloat(localStorage.getItem('volumenMusica')) || 0.5;
+
+    // Asegurarse de que el volumen esté en el rango adecuado (0-1)
+    volumenGuardado = Math.max(0, Math.min(1, volumenGuardado));
+
+    audio.volume = volumenGuardado;
+
+    window.musicaFondo = audio;
+
+    // Reproducir tras primer interacción
+    const reproducir = () => {
+      audio.play().catch(err => console.warn('No se pudo reproducir audio:', err));
+      document.removeEventListener('click', reproducir);
+      document.removeEventListener('touchstart', reproducir);
+    };
+
+    document.addEventListener('click', reproducir);
+    document.addEventListener('touchstart', reproducir);
+  }
+}
+
+
+
+// Límites del mapa cuadrado
 const limitesMapa = {
   minX: -1500,
   maxX: 1500,

@@ -12,7 +12,7 @@ import { texturaPuertoEspcial } from '/game/source/Modelos/ambientacion/puertoEs
 import { texturasatelite } from '/game/source/Modelos/ambientacion/satelite/scriptTXT_satelite.js';
 import { texturagalileo } from '/game/source/Modelos/ambientacion/galileo/scriptTXT.galileo.js';
 import { texturaorbe } from '/game/source/Modelos/ambientacion/orbe/scriptTXT_orbe.js';
-
+import { iniciarMusicaFondo } from '/game/mainGame.js';
 // Funciones para cargar cada modelo fijo (sin parámetros dinámicos)
 async function cargarEstacion(position, scale, rotation) {
   return new Promise((resolve, reject) => {
@@ -275,6 +275,9 @@ export async function cargarEscenario(scene, nombreEscenario = 'esc3') {
       //console.error(Error cargando modelo índice ${i}:, e);
     }
   }
+
+iniciarMusicaFondo();
+
   //console.log(Escenario ${nombreEscenario} cargado.);
   console.log('Configuraciones disponibles:', configuracionesEscenarios);
 console.log('Nombre de escenario recibido:', nombreEscenario);

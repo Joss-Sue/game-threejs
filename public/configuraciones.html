@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+    
 
 <head>
     <meta charset="UTF-8">
@@ -9,9 +10,11 @@
     <link rel="stylesheet" href="./estilos/config.css">
     <script src="https://kit.fontawesome.com/81e957327f.js" crossorigin="anonymous"></script>
     <title>Configuraciones</title>
+    
 </head>
 
 <body>
+    
     <div class="container">
 
         <div class="row justify-content-center" style="margin-top: 30px;">
@@ -27,6 +30,7 @@
                         </div>
                         <div class="col-8  ">
                             <a href="/index.html"><button class="btn btn-secondary w-100 btnRegresar">Regresar</button></a>
+                             
                         </div>
                     </div>
                 </div>
@@ -35,9 +39,42 @@
     </div>
 
 
+<!-- Three.js (antes que cualquier código que lo use) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const slider = document.getElementById('audioRange');
+    const label = document.getElementById('valorAudio');
+
+    // Leer volumen previo desde localStorage (o 0.5 por defecto)
+    const volumenGuardado = parseFloat(localStorage.getItem('volumenMusica')) || 0.5;
+    slider.value = volumenGuardado * 100;  // Convertir a 0-100 para el slider
+    label.textContent = slider.value;
+
+    // Escuchar cambios del slider
+    slider.addEventListener('input', () => {
+      const volumen = slider.value / 100;  // Convertir de 0-100 a 0-1
+
+      label.textContent = slider.value;
+
+      if (window.musicaFondo) {
+        window.musicaFondo.volume = volumen;  // Ajustar volumen en el objeto de audio
+      }
+
+      // Guardar el volumen en localStorage para que persista entre sesiones
+      localStorage.setItem('volumenMusica', volumen); 
+    });
+  });
+</script>
+
+        
 </body>
 
 </html>
